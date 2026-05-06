@@ -188,7 +188,7 @@ export const Dashboard = () => {
         </Panel>
 
         <Panel
-          title="Recomendacoes"
+          title="Recomendações"
           subtitle="Ações simples para melhorar o resultado deste mês."
         >
           <div className="space-y-3">

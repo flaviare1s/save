@@ -14,7 +14,7 @@ export const InsightCard = ({ item }: InsightCardProps) => {
   return (
     <article className={`rounded-2xl p-4 ring-1 ring-white/8 ${toneClassName[item.tone]}`}>
       <h3 className="text-sm font-semibold">{item.title}</h3>
-      <p className="mt-2 text-sm leading-6 text-[var(--text)]">{item.description}</p>
+      <p className="mt-2 text-sm leading-6 text-(--text)">{item.description}</p>
     </article>
   )
 }

@@ -13,27 +13,20 @@ export const Home = () => {
         </h1>
 
         <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-(--text) sm:text-base">
-          A tela inicial do app ainda está sendo montada. Por enquanto, você pode
-          configurar suas preferências no onboarding e ajustar metas e categorias
-          no perfil.
+          A tela inicial do app ainda está sendo montada. Enquanto isso, você já
+          pode criar sua conta ou entrar para configurar categorias, metas e
+          acompanhar seus padrões de consumo.
         </p>
 
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
-            to={ROUTE_PATHS.onboarding}
+            to={ROUTE_PATHS.register}
             className="inline-flex rounded-2xl bg-(--primary) px-5 py-3 text-sm font-medium text-slate-950 transition hover:opacity-90"
           >
-            Abrir onboarding
-          </Link>
-
-          <Link
-            to={ROUTE_PATHS.dashboard}
-            className="inline-flex rounded-2xl bg-white/6 px-5 py-3 text-sm font-medium text-(--text-strong) ring-1 ring-white/8 transition hover:bg-white/10"
-          >
-            Ver dashboard
+            Criar conta
           </Link>
         </div>
       </section>
     </main>
-  )
+  );
 }

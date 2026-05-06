@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, LogIn, LogOut, SlidersHorizontal, UserRound } from 'lucide-react'
 import { signOut } from 'firebase/auth'
 
@@ -26,13 +26,16 @@ const getNavLinkClassName = ({ isActive }: { isActive: boolean }) =>
 
 export const Header = () => {
   const { user } = useAuth()
+  const navigate = useNavigate()
 
   const handleLogout = () => {
     if (!user) {
       return
     }
 
-    void signOut(auth)
+    void signOut(auth).finally(() => {
+      navigate(ROUTE_PATHS.login, { replace: true })
+    })
   }
 
   return (
@@ -75,7 +78,7 @@ export const Header = () => {
             <button
               type="button"
               onClick={handleLogout}
-              className={`${linkBaseClassName} bg-transparent hover:bg-white/6`}
+              className={`${linkBaseClassName} bg-transparent hover:bg-white/6 cursor-pointer`}
             >
               <LogOut className="h-5 w-5" />
               <span className="hidden text-sm font-medium sm:inline">Logout</span>

@@ -6,7 +6,14 @@ import { auth } from "../../firebase/config";
 import { saveOnboardingData } from "../../firebase/onboarding";
 import { ROUTE_PATHS } from "../../routes/paths";
 
-const categories = ["Alimentação", "Moradia", "Transporte", "Lazer"];
+const categories = [
+  "Alimentação",
+  "Moradia",
+  "Transporte",
+  "Lazer",
+  "Saúde",
+  "Família",
+];
 const priorities = [
   "Economizar mais",
   "Entender excessos",
@@ -27,9 +34,12 @@ export const Onboarding = () => {
   const [error, setError] = useState("");
 
   const handleContinue = async () => {
+    console.log("[Onboarding] handleContinue called");
     const user = auth.currentUser;
+    console.log("[Onboarding] Current user:", user?.uid, user?.email);
 
     if (!user) {
+      console.log("[Onboarding] No user found, redirecting to login");
       navigate(ROUTE_PATHS.login);
       return;
     }
@@ -38,11 +48,14 @@ export const Onboarding = () => {
     setError("");
 
     try {
+      console.log("[Onboarding] Saving onboarding data for", user.uid);
       await saveOnboardingData(user, { category, priority, view });
-      navigate(ROUTE_PATHS.dashboard);
-    } catch {
+      console.log("[Onboarding] Onboarding data saved successfully");
+      console.log("[Onboarding] Navigating to profile");
+      navigate(ROUTE_PATHS.profile);
+    } catch (err) {
+      console.error("[Onboarding] Error:", err);
       setError("Nao foi possivel salvar suas preferências.");
-    } finally {
       setLoading(false);
     }
   };
@@ -84,9 +97,7 @@ export const Onboarding = () => {
       </div>
 
       <section className="mt-6 rounded-2xl bg-white/5 p-5 ring-1 ring-white/8">
-        <h2 className="text-base font-semibold text-(--text-strong)">
-          Resumo
-        </h2>
+        <h2 className="text-base font-semibold text-(--text-strong)">Resumo</h2>
 
         <p className="mt-3 text-sm text-(--text)">
           Categoria principal:{" "}
@@ -94,13 +105,11 @@ export const Onboarding = () => {
         </p>
 
         <p className="mt-2 text-sm text-(--text)">
-          Preferência:{" "}
-          <span className="text-(--text-strong)">{priority}</span>
+          Preferência: <span className="text-(--text-strong)">{priority}</span>
         </p>
 
         <p className="mt-2 text-sm text-(--text)">
-          Visão desejada:{" "}
-          <span className="text-(--text-strong)">{view}</span>
+          Visão desejada: <span className="text-(--text-strong)">{view}</span>
         </p>
 
         {error ? <p className="mt-4 text-sm text-red-300">{error}</p> : null}

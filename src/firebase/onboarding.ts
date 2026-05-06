@@ -15,6 +15,8 @@ const categoryColors: Record<string, string> = {
   Moradia: "#32d6ff",
   Transporte: "#f5ffe7",
   Lazer: "#b6ff00",
+  Saúde: "#ff6b6b",
+  Família: "#ffa500",
 };
 
 const categoryBudgets: Record<string, number> = {
@@ -22,6 +24,8 @@ const categoryBudgets: Record<string, number> = {
   Moradia: 1100,
   Transporte: 650,
   Lazer: 700,
+  Saúde: 400,
+  Família: 500,
 };
 
 const idealShares: Record<string, number> = {
@@ -29,55 +33,38 @@ const idealShares: Record<string, number> = {
   Moradia: 0.3,
   Transporte: 0.14,
   Lazer: 0.18,
+  Saúde: 0.08,
+  Família: 0.05,
 };
 
-const getMariaCategoryAmounts = (favoriteCategory: string) => {
-  const amounts: Record<string, number> = {
-    Alimentação: 980,
-    Moradia: 1120,
-    Transporte: 540,
-    Lazer: 760,
-  };
-
-  if (amounts[favoriteCategory]) {
-    amounts[favoriteCategory] += 260;
-  }
-
-  return amounts;
-};
-
-const createInitialDashboardData = (
-  preferences: OnboardingPreferences,
-): DashboardData => {
-  const amounts = getMariaCategoryAmounts(preferences.category);
-
+const createEmptyDashboardData = (): DashboardData => {
   return {
-    monthLabel: "Abril",
-    income: 5200,
-    totalSpent: Object.values(amounts).reduce((sum, amount) => sum + amount, 0),
-    monthlyBudget: 4100,
-    savingsGoal: 1000,
-    categories: Object.entries(amounts).map(([name, amount]) => ({
+    monthLabel: "Janeiro",
+    income: 0,
+    totalSpent: 0,
+    monthlyBudget: 0,
+    savingsGoal: 0,
+    categories: Object.entries(categoryBudgets).map(([name]) => ({
       name,
-      amount,
-      budget: categoryBudgets[name],
+      amount: 0,
+      budget: 0,
       idealShare: idealShares[name],
       color: categoryColors[name],
     })),
     weeklySpending: [
-      { label: "Sem 1", amount: 760 },
-      { label: "Sem 2", amount: 850 },
-      { label: "Sem 3", amount: 930 },
-      { label: "Sem 4", amount: 1120 },
+      { label: "Sem 1", amount: 0 },
+      { label: "Sem 2", amount: 0 },
+      { label: "Sem 3", amount: 0 },
+      { label: "Sem 4", amount: 0 },
     ],
     weekdaySpending: [
-      { label: "Seg", amount: 190 },
-      { label: "Ter", amount: 210 },
-      { label: "Qua", amount: 205 },
-      { label: "Qui", amount: 225 },
-      { label: "Sex", amount: 350 },
-      { label: "Sab", amount: 490 },
-      { label: "Dom", amount: 420 },
+      { label: "Seg", amount: 0 },
+      { label: "Ter", amount: 0 },
+      { label: "Qua", amount: 0 },
+      { label: "Qui", amount: 0 },
+      { label: "Sex", amount: 0 },
+      { label: "Sab", amount: 0 },
+      { label: "Dom", amount: 0 },
     ],
   };
 };
@@ -86,27 +73,37 @@ export const saveOnboardingData = async (
   user: User,
   preferences: OnboardingPreferences,
 ) => {
-  const name = user.displayName?.trim() || "Maria de Oliveira";
-  const email = user.email || "mariatesteteste@gmail.com";
+  console.log("[saveOnboardingData] Saving for user:", user.uid);
+  const name = user.displayName?.trim() || "Usuário";
+  const email = user.email || "";
 
-  await setDoc(
-    doc(db, "users", user.uid),
-    {
-      name,
-      email,
-      onboardingCompleted: true,
-      preferences,
-    },
-    { merge: true },
-  );
+  try {
+    console.log("[saveOnboardingData] Setting user document");
+    await setDoc(
+      doc(db, "users", user.uid),
+      {
+        name,
+        email,
+        onboardingCompleted: true,
+        preferences,
+      },
+      { merge: true },
+    );
+    console.log("[saveOnboardingData] User document set successfully");
 
-  await setDoc(
-    doc(db, "users", user.uid, "dashboard", "summary"),
-    {
-      ...createInitialDashboardData(preferences),
-      ownerName: name,
-      createdFromOnboarding: true,
-    },
-    { merge: true },
-  );
+    console.log("[saveOnboardingData] Creating empty dashboard data");
+    await setDoc(
+      doc(db, "users", user.uid, "dashboard", "summary"),
+      {
+        ...createEmptyDashboardData(),
+        ownerName: name,
+        createdFromOnboarding: true,
+      },
+      { merge: true },
+    );
+    console.log("[saveOnboardingData] Dashboard data saved successfully");
+  } catch (error) {
+    console.error("[saveOnboardingData] Error:", error);
+    throw error;
+  }
 };

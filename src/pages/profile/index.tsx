@@ -1,9 +1,10 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../contexts/auth-context'
 import { getDashboardData, updateDashboardSettings } from '../../firebase/dashboard'
 import type { CategorySpend, DashboardData } from '../../firebase/dashboard-types'
+import { markProfileAsCompleted } from '../../firebase/user-status'
 import { ROUTE_PATHS } from '../../routes/paths'
 
 type FormState = {
@@ -25,6 +26,7 @@ const toFormState = (data: DashboardData): FormState => ({
 
 export const Profile = () => {
   const { user, firstName, loading: authLoading } = useAuth()
+  const navigate = useNavigate()
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [form, setForm] = useState<FormState | null>(null)
   const [loading, setLoading] = useState(true)
@@ -108,6 +110,8 @@ export const Profile = () => {
         categories: form.categories,
       })
 
+      await markProfileAsCompleted(user.uid)
+
       const nextData = {
         ...dashboardData,
         income: Number(form.income) || 0,
@@ -120,6 +124,8 @@ export const Profile = () => {
       setDashboardData(nextData)
       setForm(toFormState(nextData))
       setMessage('Configurações salvas com sucesso.')
+      
+      navigate(ROUTE_PATHS.dashboard)
     } catch {
       setMessage('Não foi possível salvar suas configurações.')
     } finally {

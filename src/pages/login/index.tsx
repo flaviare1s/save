@@ -1,47 +1,61 @@
-import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-import { AuthShell } from '../../components/auth-shell'
-import { getAuthErrorMessage, loginWithEmail, loginWithGoogle } from '../../firebase/auth'
-import { ROUTE_PATHS } from '../../routes/paths'
+import { AuthShell } from "../../components/auth-shell";
+import {
+  getAuthErrorMessage,
+  loginWithEmail,
+  loginWithGoogle,
+} from "../../firebase/auth";
+import { ROUTE_PATHS } from "../../routes/paths";
 
 export const Login = () => {
-  const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const goToDashboard = () => navigate(ROUTE_PATHS.dashboard)
+  const goToDashboard = () => {
+    console.log("[Login] Navigating to dashboard");
+    navigate(ROUTE_PATHS.dashboard);
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setError('')
-    setLoading(true)
+    event.preventDefault();
+    setError("");
+    setLoading(true);
+    console.log("[Login] Form submit with email:", email);
 
     try {
-      await loginWithEmail(email, password)
-      goToDashboard()
+      const result = await loginWithEmail(email, password);
+      console.log("[Login] Email login success:", result.user.uid);
+      goToDashboard();
     } catch (currentError) {
-      setError(getAuthErrorMessage(currentError))
+      const msg = getAuthErrorMessage(currentError);
+      console.log("[Login] Email login error:", msg);
+      setError(msg);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleGoogleLogin = async () => {
-    setError('')
-    setLoading(true)
+    setError("");
+    setLoading(true);
+    console.log("[Login] Google login button clicked");
 
     try {
-      await loginWithGoogle()
-      goToDashboard()
+      const result = await loginWithGoogle();
+      console.log("[Login] Google login success:", result.user.uid);
+      goToDashboard();
     } catch (currentError) {
-      setError(getAuthErrorMessage(currentError))
-    } finally {
-      setLoading(false)
+      const msg = getAuthErrorMessage(currentError);
+      console.log("[Login] Google login error:", msg);
+      setError(msg);
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <AuthShell
@@ -95,4 +109,4 @@ export const Login = () => {
       </form>
     </AuthShell>
   );
-}
+};

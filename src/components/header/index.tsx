@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { LayoutDashboard, LogIn, LogOut, SlidersHorizontal, UserRound } from 'lucide-react'
-import { onAuthStateChanged, signOut, type User } from 'firebase/auth'
+import { signOut } from 'firebase/auth'
 
 import logo from '../../assets/images/logo.png'
+import { useAuth } from '../../contexts/auth-context'
 import { auth } from '../../firebase/config'
 import { ROUTE_PATHS } from '../../routes/paths'
 
@@ -25,11 +25,7 @@ const getNavLinkClassName = ({ isActive }: { isActive: boolean }) =>
   ].join(' ')
 
 export const Header = () => {
-  const [user, setUser] = useState<User | null>(null)
-
-  useEffect(() => {
-    return onAuthStateChanged(auth, setUser)
-  }, [])
+  const { user } = useAuth()
 
   const handleLogout = () => {
     if (!user) {

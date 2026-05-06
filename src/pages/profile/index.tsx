@@ -1,8 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
-import { onAuthStateChanged } from 'firebase/auth'
 import { Link } from 'react-router-dom'
 
-import { auth } from '../../firebase/config'
+import { useAuth } from '../../contexts/auth-context'
 import { getDashboardData, updateDashboardSettings } from '../../firebase/dashboard'
 import type { CategorySpend, DashboardData } from '../../firebase/dashboard-types'
 import { ROUTE_PATHS } from '../../routes/paths'
@@ -25,7 +24,7 @@ const toFormState = (data: DashboardData): FormState => ({
 })
 
 export const Profile = () => {
-  const [userId, setUserId] = useState('')
+  const { user, firstName, loading: authLoading } = useAuth()
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [form, setForm] = useState<FormState | null>(null)
   const [loading, setLoading] = useState(true)
@@ -33,33 +32,32 @@ export const Profile = () => {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const loadDashboard = async () => {
       setLoading(true)
       setMessage('')
 
       if (!user) {
-        setUserId('')
         setDashboardData(null)
         setForm(null)
         setLoading(false)
         return
       }
 
-      setUserId(user.uid)
-
       try {
         const data = await getDashboardData(user.uid)
         setDashboardData(data)
         setForm(data ? toFormState(data) : null)
       } catch {
-        setMessage('Nao foi possível carregar suas configurações.')
+        setMessage('Não foi possível carregar suas configurações.')
       } finally {
         setLoading(false)
       }
-    })
+    }
 
-    return unsubscribe
-  }, [])
+    if (!authLoading) {
+      void loadDashboard()
+    }
+  }, [authLoading, user])
 
   const handleBaseChange =
     (field: 'income' | 'monthlyBudget' | 'savingsGoal') =>
@@ -95,7 +93,7 @@ export const Profile = () => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (!userId || !dashboardData || !form) {
+    if (!user || !dashboardData || !form) {
       return
     }
 
@@ -103,7 +101,7 @@ export const Profile = () => {
     setMessage('')
 
     try {
-      await updateDashboardSettings(userId, dashboardData, {
+      await updateDashboardSettings(user.uid, dashboardData, {
         income: Number(form.income) || 0,
         monthlyBudget: Number(form.monthlyBudget) || 0,
         savingsGoal: Number(form.savingsGoal) || 0,
@@ -129,7 +127,7 @@ export const Profile = () => {
     }
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <main className="mx-auto flex min-h-[calc(100svh-72px)] w-full max-w-4xl items-center justify-center px-4 py-10 sm:px-6">
         <p className="text-sm text-(--text)">Carregando perfil...</p>
@@ -164,10 +162,10 @@ export const Profile = () => {
       <div className="max-w-2xl">
         <p className="text-sm text-(--secondary)">Profile</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-(--text-strong)">
-          Metas e valores
+          {firstName ? `${firstName}, ajuste suas metas` : 'Metas e valores'}
         </h1>
         <p className="mt-3 text-sm text-(--text)">
-          Ajuste sua renda, seu orlamento mensal, sua meta de economia e os
+          Ajuste sua renda, seu orçamento mensal, sua meta de economia e os
           valores de cada categoria.
         </p>
       </div>
@@ -266,7 +264,7 @@ export const Profile = () => {
         <button
           type="submit"
           disabled={saving}
-          className="rounded-2xl bg-(--primary) px-5 py-3 text-sm font-medium text-slate-950 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+          className="cursor-pointer rounded-2xl bg-(--primary) px-5 py-3 text-sm font-medium text-slate-950 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving ? 'Salvando...' : 'Salvar configurações'}
         </button>

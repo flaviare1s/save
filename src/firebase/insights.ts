@@ -15,6 +15,8 @@ const formatCurrency = (value: number) =>
 const formatPercent = (value: number) =>
   `${Number.isFinite(value) ? Math.round(value) : 0}%`;
 
+const formatAbsolutePercent = (value: number) => formatPercent(Math.abs(value));
+
 const fallbackCategory: CategorySpend = {
   name: "Sem categoria",
   amount: 0,
@@ -41,11 +43,70 @@ const getBudgetVariationPercent = (amount: number, budget: number) => {
   return amount > 0 ? 100 : 0;
 };
 
-const getTopTwoTotal = (categories: CategorySpend[]) => {
+const concentrationTargetShare = 80;
+
+const getSpendingCategories = (categories: CategorySpend[]) => {
   return [...categories]
-    .sort((first, second) => second.amount - first.amount)
-    .slice(0, 2)
-    .reduce((total, category) => total + category.amount, 0);
+    .filter((category) => category.amount > 0)
+    .sort((first, second) => second.amount - first.amount);
+};
+
+const getConcentrationGroup = (
+  categories: CategorySpend[],
+  totalSpent: number,
+) => {
+  const spendingCategories = getSpendingCategories(categories);
+  const concentrationCategories: CategorySpend[] = [];
+  let concentrationAmount = 0;
+
+  if (totalSpent <= 0) {
+    return {
+      categories: concentrationCategories,
+      share: 0,
+    };
+  }
+
+  for (const category of spendingCategories) {
+    concentrationCategories.push(category);
+    concentrationAmount += category.amount;
+
+    if (getSharePercent(concentrationAmount, totalSpent) >= concentrationTargetShare) {
+      break;
+    }
+  }
+
+  return {
+    categories: concentrationCategories,
+    share: getSharePercent(concentrationAmount, totalSpent),
+  };
+};
+
+const formatCategoryQuantity = (count: number) => {
+  return count === 1 ? "1 categoria" : `${count} categorias`;
+};
+
+const formatCategoryNames = (categories: CategorySpend[]) => {
+  const names = categories.map((category) => category.name);
+
+  if (names.length <= 1) {
+    return names[0] ?? "sem categoria";
+  }
+
+  return `${names.slice(0, -1).join(", ")} e ${names[names.length - 1]}`;
+};
+
+const getConcentrationSubject = (categories: CategorySpend[]) => {
+  if (categories.length === 1) {
+    return {
+      subject: `A categoria ${categories[0].name}`,
+      verb: "soma",
+    };
+  }
+
+  return {
+    subject: `As ${formatCategoryQuantity(categories.length)} principais categorias (${formatCategoryNames(categories)})`,
+    verb: "somam",
+  };
 };
 
 const getWeekOverWeekChange = (
@@ -127,44 +188,93 @@ export const getDashboardInsights = (data: DashboardData): InsightItem[] => {
   );
   const weekOverWeekChange = getWeekOverWeekChange(data.weeklySpending);
   const weekendShare = getWeekendShare(data.weekdaySpending);
-  const concentrationShare = getSharePercent(
-    getTopTwoTotal(data.categories),
+  const concentrationGroup = getConcentrationGroup(
+    data.categories,
     data.totalSpent,
   );
+  const concentrationSubject = getConcentrationSubject(
+    concentrationGroup.categories,
+  );
+  const hasSpending = data.totalSpent > 0;
   const variationLevel = getVariationLevel(data.weeklySpending);
   const projectedMonthEnd = getProjectedMonthEnd(data);
   const projectedBalance = data.income - projectedMonthEnd;
   const budgetRunoutDays = getBudgetRunoutDays(data);
+  const isHighlyConcentrated =
+    concentrationGroup.categories.length > 0 &&
+    concentrationGroup.categories.length <= 2 &&
+    concentrationGroup.share >= concentrationTargetShare;
 
   return [
     {
       title: "Categoria dominante",
-      description: `Você gastou ${formatCurrency(topCategory.amount)} com ${topCategory.name} (${formatPercent(topCategoryShare)} do total). Essa é sua categoria mais forte no momento.`,
-      tone: topCategoryShare > 30 ? "warning" : "neutral",
+      description: hasSpending
+        ? `Você gastou ${formatCurrency(topCategory.amount)} com ${topCategory.name} (${formatPercent(topCategoryShare)} do total). Essa é sua categoria mais forte no momento.`
+        : "Ainda não há gastos registrados para identificar uma categoria dominante.",
+      tone: hasSpending && topCategoryShare > 30 ? "warning" : "neutral",
     },
     {
       title: "Comparação com limite",
-      description: `Seu gasto com ${topCategory.name} ficou ${formatPercent(topCategoryVsBudget)} acima do limite da categoria, o que reduz sua margem para economizar neste mês.`,
-      tone: topCategoryVsBudget > 0 ? "warning" : "positive",
+      description:
+        topCategory.budget <= 0
+          ? `${topCategory.name} ainda não tem limite cadastrado para comparação.`
+          : topCategoryVsBudget > 0
+            ? `Seu gasto com ${topCategory.name} ficou ${formatPercent(topCategoryVsBudget)} acima do limite da categoria, o que reduz sua margem para economizar neste mês.`
+            : topCategoryVsBudget < 0
+              ? `Seu gasto com ${topCategory.name} ficou ${formatAbsolutePercent(topCategoryVsBudget)} abaixo do limite da categoria, mantendo margem para economizar neste mês.`
+              : `Seu gasto com ${topCategory.name} está exatamente no limite definido para a categoria.`,
+      tone:
+        topCategory.budget <= 0
+          ? "neutral"
+          : topCategoryVsBudget > 0
+            ? "warning"
+            : "positive",
     },
     {
       title: "Distribuição ideal",
-      description: `${topCategory.name} esta ${formatPercent(topCategoryVsIdeal)} acima da Distribuição planejada. Seu orçamento geral ainda funciona, mas a Distribuição esta desequilibrada.`,
-      tone: topCategoryVsIdeal > 0 ? "warning" : "positive",
+      description: !hasSpending
+        ? "Ainda não há gastos suficientes para comparar sua distribuição com o plano."
+        : topCategoryVsIdeal > 0
+          ? `${topCategory.name} está ${formatPercent(topCategoryVsIdeal)} acima da distribuição planejada. Seu orçamento geral ainda funciona, mas a distribuição está desequilibrada.`
+          : topCategoryVsIdeal < 0
+            ? `${topCategory.name} está ${formatAbsolutePercent(topCategoryVsIdeal)} abaixo da distribuição planejada. Essa categoria não está pressionando o orçamento no momento.`
+            : `${topCategory.name} está alinhada com a distribuição planejada.`,
+      tone: !hasSpending ? "neutral" : topCategoryVsIdeal > 0 ? "warning" : "positive",
     },
     {
       title: "Ritmo semanal",
-      description: `Seus gastos aumentaram ${formatPercent(weekOverWeekChange)} em relação a semana passada, indicando aceleração recente no consumo.`,
-      tone: weekOverWeekChange > 0 ? "warning" : "positive",
+      description:
+        weekOverWeekChange > 0
+          ? `Seus gastos aumentaram ${formatPercent(weekOverWeekChange)} em relação à semana passada, indicando aceleração recente no consumo.`
+          : weekOverWeekChange < 0
+            ? `Seus gastos caíram ${formatAbsolutePercent(weekOverWeekChange)} em relação à semana passada, indicando desaceleração no consumo.`
+            : "Seus gastos ficaram estáveis em relação à semana passada.",
+      tone:
+        weekOverWeekChange > 0
+          ? "warning"
+          : weekOverWeekChange < 0
+            ? "positive"
+            : "neutral",
     },
     {
       title: "Comportamento de consumo",
-      description: `${formatPercent(concentrationShare)} dos seus gastos estao concentrados em 2 categorias. Isso aumenta o risco de desequilibrio quando uma delas foge do esperado.`,
-      tone: concentrationShare >= 80 ? "warning" : "neutral",
+      description: hasSpending
+        ? `${concentrationSubject.subject} ${concentrationSubject.verb} ${formatPercent(concentrationGroup.share)} dos gastos. ${
+            isHighlyConcentrated
+              ? "Como poucas categorias explicam quase todo o consumo, uma variação nelas pode desequilibrar o mês."
+              : "A distribuição está menos dependente de uma ou duas categorias."
+          }`
+        : "Ainda não há gastos por categoria para avaliar concentração de consumo.",
+      tone: isHighlyConcentrated ? "warning" : "neutral",
     },
     {
       title: "Pico de consumo",
-      description: `Você concentra ${formatPercent(weekendShare)} dos gastos no fim de semana. Seu padrão de consumo sugere maior impulsividade entre sexta e domingo.`,
+      description:
+        weekendShare >= 35
+          ? `Você concentra ${formatPercent(weekendShare)} dos gastos no fim de semana. Seu padrão de consumo sugere maior impulsividade entre sexta e domingo.`
+          : weekendShare > 0
+            ? `O fim de semana representa ${formatPercent(weekendShare)} dos seus gastos, sem sinal forte de concentração nesse período.`
+            : "Não há gastos registrados no fim de semana.",
       tone: weekendShare >= 35 ? "warning" : "neutral",
     },
     {

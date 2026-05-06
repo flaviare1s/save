@@ -12,9 +12,9 @@ https://save-4089e.web.app/
 
 ## Equipe de desenvolvimento
 
-- Flávia
-- Izabella
-- Mayara
+- Flávia Reis de Almeida
+- Izabella Maria Pessoa Lins
+- Mayara Amâncio Zaltrão
 
 ## Tecnologias
 

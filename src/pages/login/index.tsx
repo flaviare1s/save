@@ -49,7 +49,7 @@ export const Login = () => {
       subtitle="Acesse sua conta para continuar."
       footer={
         <>
-          Nao tem conta?{" "}
+          Não tem conta?{" "}
           <Link to={ROUTE_PATHS.register} className="text-(--secondary)">
             Criar conta
           </Link>

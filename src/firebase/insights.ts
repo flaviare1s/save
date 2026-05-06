@@ -12,12 +12,33 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-const formatPercent = (value: number) => `${Math.round(value)}%`;
+const formatPercent = (value: number) =>
+  `${Number.isFinite(value) ? Math.round(value) : 0}%`;
+
+const fallbackCategory: CategorySpend = {
+  name: "Sem categoria",
+  amount: 0,
+  budget: 0,
+  idealShare: 0,
+  color: "#9fb0a3",
+};
 
 const getTopCategory = (categories: CategorySpend[]) => {
   return [...categories].sort(
     (first, second) => second.amount - first.amount,
-  )[0];
+  )[0] ?? fallbackCategory;
+};
+
+const getSharePercent = (amount: number, total: number) => {
+  return total > 0 ? (amount / total) * 100 : 0;
+};
+
+const getBudgetVariationPercent = (amount: number, budget: number) => {
+  if (budget > 0) {
+    return ((amount - budget) / budget) * 100;
+  }
+
+  return amount > 0 ? 100 : 0;
 };
 
 const getTopTwoTotal = (categories: CategorySpend[]) => {
@@ -98,14 +119,18 @@ const getBudgetRunoutDays = (data: DashboardData) => {
 
 export const getDashboardInsights = (data: DashboardData): InsightItem[] => {
   const topCategory = getTopCategory(data.categories);
-  const topCategoryShare = (topCategory.amount / data.totalSpent) * 100;
+  const topCategoryShare = getSharePercent(topCategory.amount, data.totalSpent);
   const topCategoryVsIdeal = topCategoryShare - topCategory.idealShare * 100;
-  const topCategoryVsBudget =
-    ((topCategory.amount - topCategory.budget) / topCategory.budget) * 100;
+  const topCategoryVsBudget = getBudgetVariationPercent(
+    topCategory.amount,
+    topCategory.budget,
+  );
   const weekOverWeekChange = getWeekOverWeekChange(data.weeklySpending);
   const weekendShare = getWeekendShare(data.weekdaySpending);
-  const concentrationShare =
-    (getTopTwoTotal(data.categories) / data.totalSpent) * 100;
+  const concentrationShare = getSharePercent(
+    getTopTwoTotal(data.categories),
+    data.totalSpent,
+  );
   const variationLevel = getVariationLevel(data.weeklySpending);
   const projectedMonthEnd = getProjectedMonthEnd(data);
   const projectedBalance = data.income - projectedMonthEnd;

@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -16,6 +17,7 @@ type AuthContextValue = {
   firstName: string;
   userStatus: UserStatus | null;
   statusLoading: boolean;
+  refreshUserStatus: () => Promise<UserStatus | null>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -36,33 +38,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userStatus, setUserStatus] = useState<UserStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
 
+  const loadUserStatus = useCallback(async (nextUser: User | null) => {
+    if (!nextUser) {
+      setUserStatus(null);
+      setStatusLoading(false);
+      return null;
+    }
+
+    const isCurrentUser = () => auth.currentUser?.uid === nextUser.uid;
+
+    setStatusLoading(true);
+
+    try {
+      const status = await getUserStatus(nextUser.uid);
+
+      if (isCurrentUser()) {
+        setUserStatus(status);
+      }
+
+      return status;
+    } catch {
+      const fallbackStatus = {
+        onboardingCompleted: false,
+        profileCompleted: false,
+      };
+
+      if (isCurrentUser()) {
+        setUserStatus(fallbackStatus);
+      }
+
+      return fallbackStatus;
+    } finally {
+      if (isCurrentUser()) {
+        setStatusLoading(false);
+      }
+    }
+  }, []);
+
   useEffect(() => {
-    return onAuthStateChanged(auth, async (nextUser) => {
+    return onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser);
       setLoading(false);
-
-      if (nextUser) {
-        console.log("[AuthContext] User logged in:", nextUser.uid);
-        setStatusLoading(true);
-        try {
-          const status = await getUserStatus(nextUser.uid);
-          console.log("[AuthContext] User status loaded:", status);
-          setUserStatus(status);
-        } catch (error) {
-          console.error("[AuthContext] Error loading status:", error);
-          setUserStatus({
-            onboardingCompleted: false,
-            profileCompleted: false,
-          });
-        } finally {
-          setStatusLoading(false);
-        }
-      } else {
-        console.log("[AuthContext] User logged out");
-        setUserStatus(null);
-      }
+      void loadUserStatus(nextUser);
     });
-  }, []);
+  }, [loadUserStatus]);
+
+  const refreshUserStatus = useCallback(() => {
+    return loadUserStatus(auth.currentUser);
+  }, [loadUserStatus]);
 
   return (
     <AuthContext.Provider
@@ -72,6 +95,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         firstName: getFirstName(user),
         userStatus,
         statusLoading,
+        refreshUserStatus,
       }}
     >
       {children}

@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 import { useAuth } from "../contexts/auth-context";
+import { getNextRouteForUserStatus } from "./flow";
 import { ROUTE_PATHS } from "./paths";
 
 export const ProtectedRoute = () => {
@@ -17,6 +18,19 @@ export const ProtectedRoute = () => {
 
   if (!user) {
     return <Navigate to={ROUTE_PATHS.login} replace />;
+  }
+
+  const nextRoute = getNextRouteForUserStatus(userStatus);
+
+  if (nextRoute !== ROUTE_PATHS.dashboard && location.pathname !== nextRoute) {
+    return <Navigate to={nextRoute} replace />;
+  }
+
+  if (
+    nextRoute === ROUTE_PATHS.dashboard &&
+    location.pathname === ROUTE_PATHS.onboarding
+  ) {
+    return <Navigate to={ROUTE_PATHS.dashboard} replace />;
   }
 
   return <Outlet />;

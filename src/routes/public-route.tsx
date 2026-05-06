@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 
 import { useAuth } from "../contexts/auth-context";
-import { ROUTE_PATHS } from "./paths";
+import { getNextRouteForUserStatus } from "./flow";
 
 export const PublicRoute = () => {
   const { user, loading, userStatus, statusLoading } = useAuth();
@@ -15,18 +15,7 @@ export const PublicRoute = () => {
   }
 
   if (user) {
-    // Se não completou onboarding, redireciona para onboarding
-    if (!userStatus?.onboardingCompleted) {
-      return <Navigate to={ROUTE_PATHS.onboarding} replace />;
-    }
-
-    // Se completou onboarding mas não profile, redireciona para profile
-    if (!userStatus?.profileCompleted) {
-      return <Navigate to={ROUTE_PATHS.profile} replace />;
-    }
-
-    // Se completou tudo, redireciona para dashboard
-    return <Navigate to={ROUTE_PATHS.dashboard} replace />;
+    return <Navigate to={getNextRouteForUserStatus(userStatus)} replace />;
   }
 
   return <Outlet />;

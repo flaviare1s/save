@@ -1,5 +1,5 @@
 import type { User } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 import { db } from "./config";
 import type { DashboardData } from "./dashboard-types";
@@ -73,27 +73,26 @@ export const saveOnboardingData = async (
   user: User,
   preferences: OnboardingPreferences,
 ) => {
-  console.log("[saveOnboardingData] Saving for user:", user.uid);
   const name = user.displayName?.trim() || "Usuário";
   const email = user.email || "";
 
-  try {
-    console.log("[saveOnboardingData] Setting user document");
-    await setDoc(
-      doc(db, "users", user.uid),
-      {
-        name,
-        email,
-        onboardingCompleted: true,
-        preferences,
-      },
-      { merge: true },
-    );
-    console.log("[saveOnboardingData] User document set successfully");
+  await setDoc(
+    doc(db, "users", user.uid),
+    {
+      name,
+      email,
+      onboardingCompleted: true,
+      preferences,
+    },
+    { merge: true },
+  );
 
-    console.log("[saveOnboardingData] Creating empty dashboard data");
+  const dashboardRef = doc(db, "users", user.uid, "dashboard", "summary");
+  const dashboardSnapshot = await getDoc(dashboardRef);
+
+  if (!dashboardSnapshot.exists()) {
     await setDoc(
-      doc(db, "users", user.uid, "dashboard", "summary"),
+      dashboardRef,
       {
         ...createEmptyDashboardData(),
         ownerName: name,
@@ -101,9 +100,5 @@ export const saveOnboardingData = async (
       },
       { merge: true },
     );
-    console.log("[saveOnboardingData] Dashboard data saved successfully");
-  } catch (error) {
-    console.error("[saveOnboardingData] Error:", error);
-    throw error;
   }
 };

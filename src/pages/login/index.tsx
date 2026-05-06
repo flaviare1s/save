@@ -7,6 +7,8 @@ import {
   loginWithEmail,
   loginWithGoogle,
 } from "../../firebase/auth";
+import { getUserStatus } from "../../firebase/user-status";
+import { getNextRouteForUserStatus } from "../../routes/flow";
 import { ROUTE_PATHS } from "../../routes/paths";
 
 export const Login = () => {
@@ -16,25 +18,21 @@ export const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const goToDashboard = () => {
-    console.log("[Login] Navigating to dashboard");
-    navigate(ROUTE_PATHS.dashboard);
+  const goToNextRoute = async (userId: string) => {
+    const status = await getUserStatus(userId);
+    navigate(getNextRouteForUserStatus(status), { replace: true });
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
     setLoading(true);
-    console.log("[Login] Form submit with email:", email);
 
     try {
       const result = await loginWithEmail(email, password);
-      console.log("[Login] Email login success:", result.user.uid);
-      goToDashboard();
+      await goToNextRoute(result.user.uid);
     } catch (currentError) {
-      const msg = getAuthErrorMessage(currentError);
-      console.log("[Login] Email login error:", msg);
-      setError(msg);
+      setError(getAuthErrorMessage(currentError));
     } finally {
       setLoading(false);
     }
@@ -43,16 +41,13 @@ export const Login = () => {
   const handleGoogleLogin = async () => {
     setError("");
     setLoading(true);
-    console.log("[Login] Google login button clicked");
 
     try {
       const result = await loginWithGoogle();
-      console.log("[Login] Google login success:", result.user.uid);
-      goToDashboard();
+      await goToNextRoute(result.user.uid);
     } catch (currentError) {
-      const msg = getAuthErrorMessage(currentError);
-      console.log("[Login] Google login error:", msg);
-      setError(msg);
+      setError(getAuthErrorMessage(currentError));
+    } finally {
       setLoading(false);
     }
   };

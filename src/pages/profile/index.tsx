@@ -7,25 +7,52 @@ import type { CategorySpend, DashboardData } from '../../firebase/dashboard-type
 import { markProfileAsCompleted } from '../../firebase/user-status'
 import { ROUTE_PATHS } from '../../routes/paths'
 
+type CategoryFormState = Omit<CategorySpend, 'amount' | 'budget'> & {
+  amount: string
+  budget: string
+}
+
 type FormState = {
   income: string
   monthlyBudget: string
   savingsGoal: string
-  categories: CategorySpend[]
+  categories: CategoryFormState[]
 }
 
 const inputClassName =
   'w-full rounded-2xl border-0 bg-white/6 px-4 py-3 text-[var(--text-strong)] outline-none ring-1 ring-white/8 placeholder:text-[var(--text)] focus:ring-[var(--primary)]'
 
+const parseMoneyInput = (value: string) => {
+  const parsedValue = Number(value)
+  return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 0
+}
+
 const toFormState = (data: DashboardData): FormState => ({
   income: String(data.income),
   monthlyBudget: String(data.monthlyBudget),
   savingsGoal: String(data.savingsGoal),
-  categories: data.categories,
+  categories: data.categories.map((category) => ({
+    ...category,
+    amount: String(category.amount),
+    budget: String(category.budget),
+  })),
 })
 
+const toCategoryData = (categories: CategoryFormState[]): CategorySpend[] => {
+  return categories.map(({ amount, budget, ...category }) => ({
+    ...category,
+    amount: parseMoneyInput(amount),
+    budget: parseMoneyInput(budget),
+  }))
+}
+
 export const Profile = () => {
-  const { user, firstName, loading: authLoading } = useAuth()
+  const {
+    user,
+    firstName,
+    loading: authLoading,
+    refreshUserStatus,
+  } = useAuth()
   const navigate = useNavigate()
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [form, setForm] = useState<FormState | null>(null)
@@ -85,7 +112,7 @@ export const Profile = () => {
 
         return {
           ...category,
-          [field]: Number(event.target.value) || 0,
+          [field]: event.target.value,
         }
       })
 
@@ -99,33 +126,40 @@ export const Profile = () => {
       return
     }
 
+    const categories = toCategoryData(form.categories)
+    const income = parseMoneyInput(form.income)
+    const monthlyBudget = parseMoneyInput(form.monthlyBudget)
+    const savingsGoal = parseMoneyInput(form.savingsGoal)
+    const totalSpent = categories.reduce((sum, category) => sum + category.amount, 0)
+
     setSaving(true)
     setMessage('')
 
     try {
       await updateDashboardSettings(user.uid, dashboardData, {
-        income: Number(form.income) || 0,
-        monthlyBudget: Number(form.monthlyBudget) || 0,
-        savingsGoal: Number(form.savingsGoal) || 0,
-        categories: form.categories,
+        income,
+        monthlyBudget,
+        savingsGoal,
+        categories,
       })
 
       await markProfileAsCompleted(user.uid)
+      await refreshUserStatus()
 
       const nextData = {
         ...dashboardData,
-        income: Number(form.income) || 0,
-        monthlyBudget: Number(form.monthlyBudget) || 0,
-        savingsGoal: Number(form.savingsGoal) || 0,
-        totalSpent: form.categories.reduce((sum, category) => sum + category.amount, 0),
-        categories: form.categories,
+        income,
+        monthlyBudget,
+        savingsGoal,
+        totalSpent,
+        categories,
       }
 
       setDashboardData(nextData)
       setForm(toFormState(nextData))
       setMessage('Configurações salvas com sucesso.')
-      
-      navigate(ROUTE_PATHS.dashboard)
+
+      navigate(ROUTE_PATHS.dashboard, { replace: true })
     } catch {
       setMessage('Não foi possível salvar suas configurações.')
     } finally {

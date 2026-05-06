@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { OptionGroup } from "../../components/option-group";
-import { auth } from "../../firebase/config";
+import { useAuth } from "../../contexts/auth-context";
 import { saveOnboardingData } from "../../firebase/onboarding";
 import { ROUTE_PATHS } from "../../routes/paths";
 
@@ -27,6 +27,7 @@ const views = [
 
 export const Onboarding = () => {
   const navigate = useNavigate();
+  const { user, refreshUserStatus } = useAuth();
   const [category, setCategory] = useState(categories[0]);
   const [priority, setPriority] = useState(priorities[0]);
   const [view, setView] = useState(views[0]);
@@ -34,13 +35,8 @@ export const Onboarding = () => {
   const [error, setError] = useState("");
 
   const handleContinue = async () => {
-    console.log("[Onboarding] handleContinue called");
-    const user = auth.currentUser;
-    console.log("[Onboarding] Current user:", user?.uid, user?.email);
-
     if (!user) {
-      console.log("[Onboarding] No user found, redirecting to login");
-      navigate(ROUTE_PATHS.login);
+      navigate(ROUTE_PATHS.login, { replace: true });
       return;
     }
 
@@ -48,14 +44,11 @@ export const Onboarding = () => {
     setError("");
 
     try {
-      console.log("[Onboarding] Saving onboarding data for", user.uid);
       await saveOnboardingData(user, { category, priority, view });
-      console.log("[Onboarding] Onboarding data saved successfully");
-      console.log("[Onboarding] Navigating to profile");
-      navigate(ROUTE_PATHS.profile);
-    } catch (err) {
-      console.error("[Onboarding] Error:", err);
-      setError("Nao foi possivel salvar suas preferências.");
+      await refreshUserStatus();
+      navigate(ROUTE_PATHS.profile, { replace: true });
+    } catch {
+      setError("Não foi possível salvar suas preferências.");
       setLoading(false);
     }
   };
@@ -65,7 +58,7 @@ export const Onboarding = () => {
       <div className="mb-8 max-w-2xl">
         <p className="text-sm text-(--secondary)">Onboarding</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-(--text-strong)">
-          Vamos comecar pelas categorias
+          Vamos começar pelas categorias
         </h1>
         <p className="mt-3 text-sm text-(--text)">
           Este app vai analisar seus padrões de consumo. Escolha suas
@@ -75,21 +68,21 @@ export const Onboarding = () => {
 
       <div className="space-y-4">
         <OptionGroup
-          title="Qual categoria voce quer acompanhar mais de perto?"
+          title="Qual categoria você quer acompanhar mais de perto?"
           options={categories}
           value={category}
           onSelect={setCategory}
         />
 
         <OptionGroup
-          title="Que tipo de ajuda voce mais espera?"
+          title="Que tipo de ajuda você mais espera?"
           options={priorities}
           value={priority}
           onSelect={setPriority}
         />
 
         <OptionGroup
-          title="Como voce prefere visualizar seus habitos?"
+          title="Como você prefere visualizar seus hábitos?"
           options={views}
           value={view}
           onSelect={setView}

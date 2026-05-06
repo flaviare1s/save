@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { LayoutDashboard, LogIn, LogOut, UserRound } from 'lucide-react'
+import { LayoutDashboard, LogIn, LogOut, SlidersHorizontal, UserRound } from 'lucide-react'
 import { onAuthStateChanged, signOut, type User } from 'firebase/auth'
 
 import logo from '../../assets/images/logo.png'
@@ -60,6 +60,11 @@ export const Header = () => {
         </Link>
 
         <nav className="flex items-center gap-2">
+          <NavLink to={ROUTE_PATHS.onboarding} className={getNavLinkClassName}>
+            <SlidersHorizontal className="h-5 w-5" />
+            <span className="hidden text-sm font-medium sm:inline">Onboarding</span>
+          </NavLink>
+
           <NavLink to={ROUTE_PATHS.dashboard} className={getNavLinkClassName}>
             <LayoutDashboard className="h-5 w-5" />
             <span className="hidden text-sm font-medium sm:inline">Dashboard</span>

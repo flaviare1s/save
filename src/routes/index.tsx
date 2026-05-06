@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { Dashboard } from '../pages/dashboard'
 import { Home } from '../pages/home'
 import { Login } from '../pages/login'
+import { Onboarding } from '../pages/onboarding'
 import { Profile } from '../pages/profile'
 import { Register } from '../pages/register'
 import { AppLayout } from '../layouts/app-layout'
@@ -13,6 +14,7 @@ export const AppRoutes = () => {
     <Routes>
       <Route element={<AppLayout />}>
         <Route path={ROUTE_PATHS.home} element={<Home />} />
+        <Route path={ROUTE_PATHS.onboarding} element={<Onboarding />} />
         <Route path={ROUTE_PATHS.dashboard} element={<Dashboard />} />
         <Route path={ROUTE_PATHS.profile} element={<Profile />} />
       </Route>

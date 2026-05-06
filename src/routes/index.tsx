@@ -15,7 +15,9 @@ export const AppRoutes = () => {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route path={ROUTE_PATHS.home} element={<Home />} />
+        <Route element={<PublicRoute />}>
+          <Route path={ROUTE_PATHS.home} element={<Home />} />
+        </Route>
 
         <Route element={<ProtectedRoute />}>
           <Route path={ROUTE_PATHS.onboarding} element={<Onboarding />} />

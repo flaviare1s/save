@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
 import { Link } from "react-router-dom";
 
 import { BarChart } from "../../components/dashboard/bar-chart";
@@ -7,8 +6,8 @@ import { DonutChart } from "../../components/dashboard/donut-chart";
 import { InsightCard } from "../../components/dashboard/insight-card";
 import { Panel } from "../../components/dashboard/panel";
 import { StatCard } from "../../components/dashboard/stat-card";
-import { auth } from "../../firebase/config";
-import { getDashboardData } from "../../firebase/dashboard";
+import { useAuth } from "../../contexts/auth-context";
+import { subscribeDashboardData } from "../../firebase/dashboard";
 import type { DashboardData } from "../../firebase/dashboard-types";
 import {
   getDashboardInsights,
@@ -16,6 +15,12 @@ import {
   getDashboardSummary,
 } from "../../firebase/insights";
 import { ROUTE_PATHS } from "../../routes/paths";
+
+type DashboardState = {
+  userId: string;
+  data: DashboardData | null;
+  error: string;
+};
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("pt-BR", {
@@ -25,27 +30,40 @@ const formatCurrency = (value: number) =>
   }).format(value);
 
 export const Dashboard = () => {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { user, loading: authLoading } = useAuth();
+  const [dashboardState, setDashboardState] =
+    useState<DashboardState | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setLoading(true);
-      setError("");
+    if (authLoading || !user) {
+      return;
+    }
 
-      try {
-        const dashboardData = await getDashboardData(user?.uid);
-        setData(dashboardData);
-      } catch {
-        setError("Nao foi possivel carregar o dashboard.");
-      } finally {
-        setLoading(false);
-      }
-    });
+    const unsubscribe = subscribeDashboardData(
+      user.uid,
+      (dashboardData) => {
+        setDashboardState({
+          userId: user.uid,
+          data: dashboardData,
+          error: "",
+        });
+      },
+      () => {
+        setDashboardState({
+          userId: user.uid,
+          data: null,
+          error: "Nao foi possivel carregar o dashboard.",
+        });
+      },
+    );
 
     return unsubscribe;
-  }, []);
+  }, [authLoading, user]);
+
+  const isCurrentUserSnapshot = dashboardState?.userId === user?.uid;
+  const data = isCurrentUserSnapshot ? (dashboardState?.data ?? null) : null;
+  const error = isCurrentUserSnapshot ? (dashboardState?.error ?? "") : "";
+  const loading = authLoading || Boolean(user && !isCurrentUserSnapshot);
 
   const summary = useMemo(() => {
     return data ? getDashboardSummary(data) : null;

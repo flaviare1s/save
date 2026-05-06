@@ -130,13 +130,12 @@ export const Profile = () => {
     const income = parseMoneyInput(form.income)
     const monthlyBudget = parseMoneyInput(form.monthlyBudget)
     const savingsGoal = parseMoneyInput(form.savingsGoal)
-    const totalSpent = categories.reduce((sum, category) => sum + category.amount, 0)
 
     setSaving(true)
     setMessage('')
 
     try {
-      await updateDashboardSettings(user.uid, dashboardData, {
+      const nextData = await updateDashboardSettings(user.uid, dashboardData, {
         income,
         monthlyBudget,
         savingsGoal,
@@ -145,15 +144,6 @@ export const Profile = () => {
 
       await markProfileAsCompleted(user.uid)
       await refreshUserStatus()
-
-      const nextData = {
-        ...dashboardData,
-        income,
-        monthlyBudget,
-        savingsGoal,
-        totalSpent,
-        categories,
-      }
 
       setDashboardData(nextData)
       setForm(toFormState(nextData))

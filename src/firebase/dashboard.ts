@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore'
 
 import { db } from './config'
 import type { CategorySpend, DashboardData } from './dashboard-types'
@@ -18,6 +18,28 @@ export const getDashboardData = async (userId?: string | null) => {
   return dashboardSnapshot.data() as DashboardData
 }
 
+export const subscribeDashboardData = (
+  userId: string,
+  onData: (data: DashboardData | null) => void,
+  onError: () => void,
+) => {
+  const dashboardRef = doc(db, 'users', userId, 'dashboard', 'summary')
+
+  return onSnapshot(
+    dashboardRef,
+    (dashboardSnapshot) => {
+      onData(
+        dashboardSnapshot.exists()
+          ? (dashboardSnapshot.data() as DashboardData)
+          : null,
+      )
+    },
+    () => {
+      onError()
+    },
+  )
+}
+
 type DashboardSettingsInput = {
   income: number
   monthlyBudget: number
@@ -29,8 +51,7 @@ const normalizeMoney = (value: number) => {
   return Number.isFinite(value) && value > 0 ? value : 0
 }
 
-export const updateDashboardSettings = async (
-  userId: string,
+const buildDashboardSettingsData = (
   currentData: DashboardData,
   input: DashboardSettingsInput,
 ) => {
@@ -41,16 +62,28 @@ export const updateDashboardSettings = async (
   }))
   const totalSpent = categories.reduce((sum, category) => sum + category.amount, 0)
 
+  return {
+    ...currentData,
+    income: normalizeMoney(input.income),
+    monthlyBudget: normalizeMoney(input.monthlyBudget),
+    savingsGoal: normalizeMoney(input.savingsGoal),
+    totalSpent,
+    categories,
+  }
+}
+
+export const updateDashboardSettings = async (
+  userId: string,
+  currentData: DashboardData,
+  input: DashboardSettingsInput,
+) => {
+  const nextData = buildDashboardSettingsData(currentData, input)
+
   await setDoc(
     doc(db, 'users', userId, 'dashboard', 'summary'),
-    {
-      ...currentData,
-      income: normalizeMoney(input.income),
-      monthlyBudget: normalizeMoney(input.monthlyBudget),
-      savingsGoal: normalizeMoney(input.savingsGoal),
-      totalSpent,
-      categories,
-    },
+    nextData,
     { merge: true },
   )
+
+  return nextData
 }

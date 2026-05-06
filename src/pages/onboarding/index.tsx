@@ -1,28 +1,62 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { ROUTE_PATHS } from '../../routes/paths'
-import { OptionGroup } from '../../components/option-group'
+import { OptionGroup } from "../../components/option-group";
+import { auth } from "../../firebase/config";
+import { saveOnboardingData } from "../../firebase/onboarding";
+import { ROUTE_PATHS } from "../../routes/paths";
 
-const categories = ['Alimentação', 'Moradia', 'Transporte', 'Lazer']
-const priorities = ['Economizar mais', 'Entender excessos', 'Receber alertas simples']
-const views = ['Categorias principais', 'Padrões de consumo', 'Insights rápidos']
+const categories = ["Alimentação", "Moradia", "Transporte", "Lazer"];
+const priorities = [
+  "Economizar mais",
+  "Entender excessos",
+  "Receber alertas simples",
+];
+const views = [
+  "Categorias principais",
+  "Padrões de consumo",
+  "Insights rápidos",
+];
+
 export const Onboarding = () => {
-  const navigate = useNavigate()
-  const [category, setCategory] = useState(categories[0])
-  const [priority, setPriority] = useState(priorities[0])
-  const [view, setView] = useState(views[0])
+  const navigate = useNavigate();
+  const [category, setCategory] = useState(categories[0]);
+  const [priority, setPriority] = useState(priorities[0]);
+  const [view, setView] = useState(views[0]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleContinue = async () => {
+    const user = auth.currentUser;
+
+    if (!user) {
+      navigate(ROUTE_PATHS.login);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      await saveOnboardingData(user, { category, priority, view });
+      navigate(ROUTE_PATHS.dashboard);
+    } catch {
+      setError("Nao foi possivel salvar suas preferencias.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-10 sm:px-6">
       <div className="mb-8 max-w-2xl">
-        <p className="text-sm text-(--secondary)">Onboarding</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-(--text-strong)">
+        <p className="text-sm text-[var(--secondary)]">Onboarding</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[var(--text-strong)]">
           Vamos comecar pelas categorias
         </h1>
-        <p className="mt-3 text-sm text-(--text)">
-          Este app vai analisar seus padrões de consumo. Escolha suas
-          preferências principais para personalizar a experiência.
+        <p className="mt-3 text-sm text-[var(--text)]">
+          Este app vai analisar seus padroes de consumo. Escolha suas
+          preferencias principais para personalizar a experiencia.
         </p>
       </div>
 
@@ -50,32 +84,36 @@ export const Onboarding = () => {
       </div>
 
       <section className="mt-6 rounded-2xl bg-white/5 p-5 ring-1 ring-white/8">
-        <h2 className="text-base font-semibold text-(--text-strong)">
+        <h2 className="text-base font-semibold text-[var(--text-strong)]">
           Resumo
         </h2>
 
-        <p className="mt-3 text-sm text-(--text)">
-          Categoria principal:{' '}
-          <span className="text-(--text-strong)">{category}</span>
+        <p className="mt-3 text-sm text-[var(--text)]">
+          Categoria principal:{" "}
+          <span className="text-[var(--text-strong)]">{category}</span>
         </p>
 
-        <p className="mt-2 text-sm text-(--text)">
-          Preferência:{' '}
-          <span className="text-(--text-strong)">{priority}</span>
+        <p className="mt-2 text-sm text-[var(--text)]">
+          Preferencia:{" "}
+          <span className="text-[var(--text-strong)]">{priority}</span>
         </p>
 
-        <p className="mt-2 text-sm text-(--text)">
-          Visão desejada: <span className="text-(--text-strong)">{view}</span>
+        <p className="mt-2 text-sm text-[var(--text)]">
+          Visao desejada:{" "}
+          <span className="text-[var(--text-strong)]">{view}</span>
         </p>
+
+        {error ? <p className="mt-4 text-sm text-red-300">{error}</p> : null}
 
         <button
           type="button"
-          onClick={() => navigate(ROUTE_PATHS.dashboard)}
-          className="mt-5 cursor-pointer rounded-2xl bg-(--primary) px-5 py-3 text-sm font-medium text-slate-950 transition hover:opacity-90"
+          onClick={handleContinue}
+          disabled={loading}
+          className="mt-5 cursor-pointer rounded-2xl bg-[var(--primary)] px-5 py-3 text-sm font-medium text-slate-950 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Continuar
+          {loading ? "Salvando..." : "Continuar"}
         </button>
       </section>
     </main>
-  )
-}
+  );
+};

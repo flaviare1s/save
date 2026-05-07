@@ -120,7 +120,7 @@ export const Dashboard = () => {
       <div className="max-w-3xl">
         <p className="text-sm text-(--secondary)">Dashboard</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-(--text-strong)">
-          Analise simples do seu consumo
+          Análise simples do seu consumo
         </h1>
         <p className="mt-3 text-sm text-(--text)">
           Seus gastos por categoria, padrões principais e algumas ações práticas

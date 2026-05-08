@@ -24,6 +24,8 @@ export const Onboarding = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [viewingTransaction, setViewingTransaction] = useState<any | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   const categories = [
     { id: "alimentacao", icon: "🍔", label: "Alimentação" },
@@ -375,48 +377,89 @@ export const Onboarding = () => {
             Nenhuma transação registrada ainda.
           </p>
         ) : (
-          <div className="flex flex-col gap-3">
-            {[...mockData.transacoes].reverse().map(t => {
-              const categoryInfo = getCategoryDisplay(t.categoria);
-              const emotionalInfo = getContextDisplay(t.contextoEmocional);
+          <div className="flex flex-col gap-4">
+            <div className="overflow-x-auto rounded-2xl ring-1 ring-white/10 bg-white/5">
+              <table className="w-full text-left text-sm text-(--text)">
+                <thead className="border-b border-white/10 bg-white/5 text-xs uppercase text-(--text-strong)">
+                  <tr>
+                    <th scope="col" className="px-4 py-3">Data</th>
+                    <th scope="col" className="px-4 py-3">Descrição</th>
+                    <th scope="col" className="px-4 py-3">Categoria</th>
+                    <th scope="col" className="px-4 py-3">Contexto</th>
+                    <th scope="col" className="px-4 py-3">Valor</th>
+                    <th scope="col" className="px-4 py-3 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...mockData.transacoes]
+                    .reverse()
+                    .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                    .map(t => {
+                      const categoryInfo = getCategoryDisplay(t.categoria);
+                      const emotionalInfo = getContextDisplay(t.contextoEmocional);
 
-              return (
-                <div key={t.id} className="flex items-center justify-between rounded-2xl bg-white/5 p-4 ring-1 ring-white/8 transition hover:bg-white/10">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base font-semibold text-white">{t.descricao}</span>
-                      <span className="text-xs font-medium text-red-400 bg-red-400/10 px-2 py-0.5 rounded-full">
-                        R$ -{t.valor.toFixed(2).replace('.', ',')}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-(--text)">
-                      <span>{t.data.split('-').reverse().join('/')}</span>
-                      <span className="w-1 h-1 rounded-full bg-white/20"></span>
-                      <span className="flex items-center gap-1">{categoryInfo?.icon} {categoryInfo?.label}</span>
-                      <span className="w-1 h-1 rounded-full bg-white/20 hidden sm:block"></span>
-                      <span className="hidden sm:flex items-center gap-1">{emotionalInfo?.icon} {emotionalInfo?.title}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 ml-4">
-                    <button 
-                      onClick={() => setViewingTransaction(t)}
-                      className="p-2 rounded-xl bg-white/5 text-(--text) hover:text-white hover:bg-white/10 transition cursor-pointer"
-                      title="Visualizar"
-                    >
-                      <Eye size={18} />
-                    </button>
-                    <button 
-                      onClick={() => handleEdit(t)}
-                      className="p-2 rounded-xl bg-(--primary)/10 text-(--primary) hover:bg-(--primary)/20 transition cursor-pointer"
-                      title="Editar"
-                    >
-                      <Pencil size={18} />
-                    </button>
-                  </div>
+                      return (
+                        <tr key={t.id} className="border-b border-white/5 transition hover:bg-white/5 last:border-0">
+                          <td className="px-4 py-3 whitespace-nowrap">{t.data.split('-').reverse().join('/')}</td>
+                          <td className="px-4 py-3 font-medium text-white">{t.descricao}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className="flex items-center gap-1">{categoryInfo?.icon} {categoryInfo?.label}</span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className="flex items-center gap-1">{emotionalInfo?.icon} {emotionalInfo?.title}</span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-red-400 font-medium">
+                            R$ -{t.valor.toFixed(2).replace('.', ',')}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button 
+                                onClick={() => setViewingTransaction(t)}
+                                className="p-1.5 rounded-lg bg-white/5 text-(--text) hover:text-white hover:bg-white/10 transition cursor-pointer"
+                                title="Visualizar"
+                              >
+                                <Eye size={16} />
+                              </button>
+                              <button 
+                                onClick={() => handleEdit(t)}
+                                className="p-1.5 rounded-lg bg-(--primary)/10 text-(--primary) hover:bg-(--primary)/20 transition cursor-pointer"
+                                title="Editar"
+                              >
+                                <Pencil size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Paginação */}
+            {Math.ceil(mockData.transacoes.length / ITEMS_PER_PAGE) > 1 && (
+              <div className="flex items-center justify-between px-2">
+                <span className="text-xs text-(--text)">
+                  Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} a {Math.min(currentPage * ITEMS_PER_PAGE, mockData.transacoes.length)} de {mockData.transacoes.length} transações
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 rounded-lg text-sm bg-white/5 text-white disabled:opacity-30 transition hover:bg-white/10 cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(Math.ceil(mockData.transacoes.length / ITEMS_PER_PAGE), p + 1))}
+                    disabled={currentPage === Math.ceil(mockData.transacoes.length / ITEMS_PER_PAGE)}
+                    className="px-3 py-1.5 rounded-lg text-sm bg-white/5 text-white disabled:opacity-30 transition hover:bg-white/10 cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    Próxima
+                  </button>
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
         )}
       </section>

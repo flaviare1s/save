@@ -7,8 +7,6 @@ import {
   loginWithGoogle,
   registerWithEmail,
 } from "../../firebase/auth";
-import { getUserStatus } from "../../firebase/user-status";
-import { getNextRouteForUserStatus } from "../../routes/flow";
 import { ROUTE_PATHS } from "../../routes/paths";
 
 export const Register = () => {
@@ -19,19 +17,14 @@ export const Register = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const goToNextRoute = async (userId: string) => {
-    const status = await getUserStatus(userId);
-    navigate(getNextRouteForUserStatus(status), { replace: true });
-  };
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      const result = await registerWithEmail(name, email, password);
-      await goToNextRoute(result.user.uid);
+      await registerWithEmail(name, email, password);
+      navigate(ROUTE_PATHS.dashboard, { replace: true });
     } catch (currentError) {
       setError(getAuthErrorMessage(currentError));
     } finally {
@@ -44,8 +37,8 @@ export const Register = () => {
     setLoading(true);
 
     try {
-      const result = await loginWithGoogle();
-      await goToNextRoute(result.user.uid);
+      await loginWithGoogle();
+      navigate(ROUTE_PATHS.dashboard, { replace: true });
     } catch (currentError) {
       setError(getAuthErrorMessage(currentError));
     } finally {

@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import { useEffect, useState } from "react";
 
 const NOMES_CONTEXTO = {
   pos_trabalho_exaustivo: "Pós-trabalho",
@@ -69,6 +70,18 @@ const CustomTooltip = (props: {
 };
 
 export function GraficoContexto({ dados }: GraficoContextoProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const dadosFormatados: FormattedData[] = Object.entries(dados).map(
     ([contexto, info]) => ({
       name: NOMES_CONTEXTO[contexto as keyof typeof NOMES_CONTEXTO] || contexto,
@@ -91,7 +104,7 @@ export function GraficoContexto({ dados }: GraficoContextoProps) {
           <BarChart
             data={dadosFormatados}
             layout="vertical"
-            margin={{ left: 120 }}
+            margin={{ left: isMobile ? 60 : 120 }}
           >
             <CartesianGrid
               strokeDasharray="3 3"

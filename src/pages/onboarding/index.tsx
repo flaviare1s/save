@@ -13,6 +13,9 @@ export const Onboarding = () => {
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
   const [data, setData] = useState("");
+  
+  const [tipoGasto, setTipoGasto] = useState<"essencial" | "nao_essencial" | "">("");
+
   const [categoria, setCategoria] = useState("");
   const [contextoEmocional, setContextoEmocional] = useState("");
   const [periodo, setPeriodo] = useState("");
@@ -28,6 +31,15 @@ export const Onboarding = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const ITEMS_PER_PAGE = 10;
 
+  const essentialCategories = [
+    { id: "contas", icon: "📄", label: "Contas Básicas" },
+    { id: "moradia", icon: "🏠", label: "Moradia" },
+    { id: "mercado", icon: "🛒", label: "Mercado/Feira" },
+    { id: "saude", icon: "💊", label: "Saúde & Farmácia" },
+    { id: "filhos", icon: "👶", label: "Filhos" },
+    { id: "transporte", icon: "🚌", label: "Transporte" }
+  ];
+
   const categories = [
     { id: "alimentacao", icon: "🍔", label: "Alimentação" },
     { id: "moda", icon: "👗", label: "Moda" },
@@ -35,7 +47,7 @@ export const Onboarding = () => {
     { id: "social", icon: "🥂", label: "Social" },
     { id: "digital", icon: "📱", label: "Digital" },
     { id: "autodesenvolvimento", icon: "📚", label: "Autodesenvolvimento" },
-    { id: "conforto", icon: "🏠", label: "Conforto" }
+    { id: "conforto", icon: "🛋️", label: "Conforto" }
   ];
 
   const emotionalContexts = [
@@ -56,6 +68,7 @@ export const Onboarding = () => {
     setDescricao("");
     setValor("");
     setData("");
+    setTipoGasto("");
     setCategoria("");
     setContextoEmocional("");
     setPeriodo("");
@@ -63,21 +76,31 @@ export const Onboarding = () => {
     setError("");
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleEdit = (transaction: any) => {
     setEditingId(transaction.id);
     setDescricao(transaction.descricao);
     setValor(transaction.valor.toString().replace(".", ","));
     setData(transaction.data);
+    
+    const isEssential = essentialCategories.some(c => c.id === transaction.categoria);
+    setTipoGasto(isEssential ? "essencial" : "nao_essencial");
+    
     setCategoria(transaction.categoria);
-    setContextoEmocional(transaction.contextoEmocional);
-    setPeriodo(transaction.periodo);
+    setContextoEmocional(transaction.contextoEmocional || "");
+    setPeriodo(transaction.periodo || "");
     
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSave = async () => {
-    if (!descricao || !valor || !data || !categoria || !contextoEmocional || !periodo) {
-      setError("Por favor, preencha todos os campos obrigatórios.");
+    if (!descricao || !valor || !data || !tipoGasto || !categoria) {
+      setError("Por favor, preencha todos os campos obrigatórios básicos.");
+      return;
+    }
+
+    if (tipoGasto === "nao_essencial" && (!contextoEmocional || !periodo)) {
+      setError("Por favor, preencha o contexto emocional e período para gastos não essenciais.");
       return;
     }
 
@@ -98,9 +121,9 @@ export const Onboarding = () => {
         valor: parsedValor,
         categoria,
         subcategoria: "outros", // fallback
-        contextoEmocional,
+        contextoEmocional: tipoGasto === "nao_essencial" ? contextoEmocional : "",
         diaSemana: new Date(data).toLocaleDateString('pt-BR', { weekday: 'long' }).split('-')[0],
-        periodo
+        periodo: tipoGasto === "nao_essencial" ? periodo : ""
       };
 
       if (editingId) {
@@ -117,8 +140,8 @@ export const Onboarding = () => {
       // Lógica de backend original (autenticação e onboarding)
       await saveOnboardingData(user, { 
         category: categoria, 
-        priority: contextoEmocional, 
-        view: periodo 
+        priority: tipoGasto === "nao_essencial" ? contextoEmocional : "essencial", 
+        view: tipoGasto === "nao_essencial" ? periodo : "na" 
       });
       await refreshUserStatus();
 
@@ -132,7 +155,9 @@ export const Onboarding = () => {
     }
   };
 
-  const getCategoryDisplay = (catId: string) => categories.find(c => c.id === catId);
+  const getCategoryDisplay = (catId: string) => {
+    return categories.find(c => c.id === catId) || essentialCategories.find(c => c.id === catId);
+  };
   const getContextDisplay = (ctxId: string) => emotionalContexts.find(c => c.id === ctxId);
 
   return (
@@ -173,7 +198,7 @@ export const Onboarding = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-(--text)">Período</p>
-                  <p className="text-sm text-white capitalize">{viewingTransaction.periodo}</p>
+                  <p className="text-sm text-white capitalize">{viewingTransaction.periodo || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-(--text)">Subcategoria</p>
@@ -187,13 +212,15 @@ export const Onboarding = () => {
                   <span className="text-sm text-white">{getCategoryDisplay(viewingTransaction.categoria)?.label}</span>
                 </div>
               </div>
-              <div>
-                <p className="text-xs text-(--text)">Contexto Emocional</p>
-                <div className="mt-1 flex items-center gap-2">
-                  <span>{getContextDisplay(viewingTransaction.contextoEmocional)?.icon}</span>
-                  <span className="text-sm text-white">{getContextDisplay(viewingTransaction.contextoEmocional)?.title}</span>
+              {viewingTransaction.contextoEmocional && (
+                <div>
+                  <p className="text-xs text-(--text)">Contexto Emocional</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span>{getContextDisplay(viewingTransaction.contextoEmocional)?.icon}</span>
+                    <span className="text-sm text-white">{getContextDisplay(viewingTransaction.contextoEmocional)?.title}</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
             
             <button
@@ -219,7 +246,7 @@ export const Onboarding = () => {
         <p className="mt-3 text-sm text-(--text)">
           {editingId 
             ? "Atualize as informações desta transação abaixo."
-            : "Este app vai analisar seus padrões de consumo. Escolha suas preferências principais para personalizar a experiência, lembre-se: Quanto mais detalhes, melhor entendemos seus padrões."
+            : "Este app vai analisar seus padrões de consumo. Escolha suas preferências principais para personalizar a experiência."
           }
         </p>
       </div>
@@ -239,7 +266,7 @@ export const Onboarding = () => {
               <label className="text-sm font-medium text-(--text-strong)">O que você comprou? *</label>
               <input 
                 type="text" 
-                placeholder="ex: iFood - pizza, vestido - Zara"
+                placeholder="ex: Conta de Luz, iFood - pizza..."
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 className="rounded-xl bg-white/5 px-4 py-3 text-sm text-(--text-strong) outline-none ring-1 ring-white/10 focus:ring-(--primary)"
@@ -275,79 +302,124 @@ export const Onboarding = () => {
         <section className="rounded-2xl bg-white/5 p-6 ring-1 ring-white/8">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-(--text-strong)">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-(--primary) text-xs text-slate-950">2</span>
-            Categoria *
+            Natureza do gasto *
           </div>
-          
-          <div className="flex flex-wrap gap-3">
-            {categories.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => setCategoria(cat.id)}
-                className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition cursor-pointer ${
-                  categoria === cat.id 
-                    ? 'bg-(--primary) text-slate-950' 
-                    : 'bg-white/5 text-(--text-strong) ring-1 ring-white/10 hover:bg-white/10'
-                }`}
-              >
-                <span>{cat.icon}</span>
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Step 3 */}
-        <section className="rounded-2xl bg-white/5 p-6 ring-1 ring-white/8">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-(--text-strong)">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-(--primary) text-xs text-slate-950">3</span>
-            Como você estava se sentindo? *
-          </div>
-          <p className="mb-4 text-xs text-(--text)">Isso nos ajuda a identificar padrões emocionais no seu consumo.</p>
+          <p className="mb-4 text-xs text-(--text)">Isso determina como analisamos o seu consumo.</p>
           
           <div className="grid gap-3 sm:grid-cols-2">
-            {emotionalContexts.map(ctx => (
-              <button
-                key={ctx.id}
-                onClick={() => setContextoEmocional(ctx.id)}
-                className={`flex flex-col items-start gap-1 rounded-xl p-4 text-left transition cursor-pointer ${
-                  contextoEmocional === ctx.id
-                    ? 'bg-(--primary)/20 ring-1 ring-(--primary)'
-                    : 'bg-white/5 ring-1 ring-white/10 hover:bg-white/10'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">{ctx.icon}</span>
-                  <span className="text-sm font-semibold text-(--text-strong)">{ctx.title}</span>
-                </div>
-                <span className="text-xs text-(--text)">{ctx.subtitle}</span>
-              </button>
-            ))}
+            <button
+              onClick={() => {
+                setTipoGasto("essencial");
+                setCategoria(""); // reset category on switch
+              }}
+              className={`flex flex-col items-start gap-1 rounded-xl p-4 text-left transition cursor-pointer ${
+                tipoGasto === "essencial"
+                  ? 'bg-(--primary)/20 ring-1 ring-(--primary)'
+                  : 'bg-white/5 ring-1 ring-white/10 hover:bg-white/10'
+              }`}
+            >
+              <span className="text-sm font-semibold text-(--text-strong)">Gasto Essencial</span>
+              <span className="text-xs text-(--text)">Contas básicas, moradia, mercado, saúde...</span>
+            </button>
+            <button
+              onClick={() => {
+                setTipoGasto("nao_essencial");
+                setCategoria(""); // reset category on switch
+              }}
+              className={`flex flex-col items-start gap-1 rounded-xl p-4 text-left transition cursor-pointer ${
+                tipoGasto === "nao_essencial"
+                  ? 'bg-(--primary)/20 ring-1 ring-(--primary)'
+                  : 'bg-white/5 ring-1 ring-white/10 hover:bg-white/10'
+              }`}
+            >
+              <span className="text-sm font-semibold text-(--text-strong)">Gasto Não Essencial</span>
+              <span className="text-xs text-(--text)">Estilo de vida, roupas, ifood, social...</span>
+            </button>
           </div>
         </section>
 
-        {/* Step 4 */}
-        <section className="rounded-2xl bg-white/5 p-6 ring-1 ring-white/8">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-(--text-strong)">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-(--primary) text-xs text-slate-950">4</span>
-            Período do dia *
-          </div>
-          
-          <div className="flex flex-wrap gap-3">
-            {periods.map(per => (
-              <button
-                key={per.id}
-                onClick={() => setPeriodo(per.id)}
-                className={`rounded-xl px-6 py-3 text-sm font-medium transition cursor-pointer ${
-                  periodo === per.id 
-                    ? 'bg-(--primary) text-slate-950' 
-                    : 'bg-white/5 text-(--text-strong) ring-1 ring-white/10 hover:bg-white/10'
-                }`}
-              >
-                {per.label}
-              </button>
-            ))}
-          </div>
-        </section>
+        {/* Step 3 - Categorias */}
+        {tipoGasto !== "" && (
+          <section className="rounded-2xl bg-white/5 p-6 ring-1 ring-white/8">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-(--text-strong)">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-(--primary) text-xs text-slate-950">3</span>
+              Categoria *
+            </div>
+            
+            <div className="flex flex-wrap gap-3">
+              {(tipoGasto === "essencial" ? essentialCategories : categories).map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setCategoria(cat.id)}
+                  className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition cursor-pointer ${
+                    categoria === cat.id 
+                      ? 'bg-(--primary) text-slate-950' 
+                      : 'bg-white/5 text-(--text-strong) ring-1 ring-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  <span>{cat.icon}</span>
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Step 4 & 5 - Somente para Não Essenciais */}
+        {tipoGasto === "nao_essencial" && (
+          <>
+            <section className="rounded-2xl bg-white/5 p-6 ring-1 ring-white/8">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-(--text-strong)">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-(--primary) text-xs text-slate-950">4</span>
+                Como você estava se sentindo? *
+              </div>
+              <p className="mb-4 text-xs text-(--text)">Isso nos ajuda a identificar padrões emocionais no seu consumo.</p>
+              
+              <div className="grid gap-3 sm:grid-cols-2">
+                {emotionalContexts.map(ctx => (
+                  <button
+                    key={ctx.id}
+                    onClick={() => setContextoEmocional(ctx.id)}
+                    className={`flex flex-col items-start gap-1 rounded-xl p-4 text-left transition cursor-pointer ${
+                      contextoEmocional === ctx.id
+                        ? 'bg-(--primary)/20 ring-1 ring-(--primary)'
+                        : 'bg-white/5 ring-1 ring-white/10 hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{ctx.icon}</span>
+                      <span className="text-sm font-semibold text-(--text-strong)">{ctx.title}</span>
+                    </div>
+                    <span className="text-xs text-(--text)">{ctx.subtitle}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-2xl bg-white/5 p-6 ring-1 ring-white/8">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-(--text-strong)">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-(--primary) text-xs text-slate-950">5</span>
+                Período do dia *
+              </div>
+              
+              <div className="flex flex-wrap gap-3">
+                {periods.map(per => (
+                  <button
+                    key={per.id}
+                    onClick={() => setPeriodo(per.id)}
+                    className={`rounded-xl px-6 py-3 text-sm font-medium transition cursor-pointer ${
+                      periodo === per.id 
+                        ? 'bg-(--primary) text-slate-950' 
+                        : 'bg-white/5 text-(--text-strong) ring-1 ring-white/10 hover:bg-white/10'
+                    }`}
+                  >
+                    {per.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
 
         <div className="flex items-center gap-3 mt-4">
           <button
@@ -424,17 +496,25 @@ export const Onboarding = () => {
                       .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
                       .map(t => {
                         const categoryInfo = getCategoryDisplay(t.categoria);
-                        const emotionalInfo = getContextDisplay(t.contextoEmocional);
+                        const emotionalInfo = t.contextoEmocional ? getContextDisplay(t.contextoEmocional) : null;
 
                         return (
                           <tr key={t.id} className="border-b border-white/5 transition hover:bg-white/5 last:border-0">
                             <td className="px-4 py-3 whitespace-nowrap">{t.data.split('-').reverse().join('/')}</td>
                             <td className="px-4 py-3 font-medium text-white">{t.descricao}</td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <span className="flex items-center gap-1">{categoryInfo?.icon} {categoryInfo?.label}</span>
+                              <span className="flex items-center gap-1">
+                                {categoryInfo?.icon} {categoryInfo?.label}
+                              </span>
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <span className="flex items-center gap-1">{emotionalInfo?.icon} {emotionalInfo?.title}</span>
+                              {emotionalInfo ? (
+                                <span className="flex items-center gap-1 text-(--text)">
+                                  {emotionalInfo.icon} {emotionalInfo.title}
+                                </span>
+                              ) : (
+                                <span className="text-(--text) opacity-50">-</span>
+                              )}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-red-400 font-medium">
                               R$ -{t.valor.toFixed(2).replace('.', ',')}

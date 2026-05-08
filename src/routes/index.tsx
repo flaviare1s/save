@@ -10,6 +10,7 @@ import { ProtectedRoute } from "./protected-route";
 import { PublicRoute } from "./public-route";
 import { ROUTE_PATHS } from "./paths";
 import { Analytics } from "../pages/analytics";
+import ArquetipoPage from "../pages/archetypes";
 
 export const AppRoutes = () => {
   return (
@@ -20,6 +21,7 @@ export const AppRoutes = () => {
           <Route path={ROUTE_PATHS.dashboard} element={<Dashboard />} />
           <Route path={ROUTE_PATHS.profile} element={<Profile />} />
           <Route path={ROUTE_PATHS.analytics} element={<Analytics />} />
+          <Route path={ROUTE_PATHS.archetypes} element={<ArquetipoPage />} />
         </Route>
       </Route>
 

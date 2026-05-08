@@ -1,0 +1,233 @@
+/**
+ * Calcula o total gasto por categoria
+ * @param {Array} transacoes - Lista de transações
+ * @returns {Object} - Objeto com totais por categoria
+ */
+export function totalPorCategoria(transacoes) {
+  return transacoes.reduce((acc, transacao) => {
+    const categoria = transacao.categoria
+    acc[categoria] = (acc[categoria] || 0) + transacao.valor
+    return acc
+  }, {})
+}
+
+/**
+ * Identifica a categoria dominante (maior % do total)
+ * @param {Array} transacoes - Lista de transações
+ * @returns {Object} - Categoria dominante com nome e percentual
+ */
+export function categoriaDominante(transacoes) {
+  const totais = totalPorCategoria(transacoes)
+  const totalGeral = Object.values(totais).reduce((a, b) => a + b, 0)
+  
+  let maior = { categoria: '', valor: 0, percentual: 0 }
+  
+  for (const [categoria, valor] of Object.entries(totais)) {
+    if (valor > maior.valor) {
+      maior = {
+        categoria,
+        valor,
+        percentual: (valor / totalGeral) * 100
+      }
+    }
+  }
+  
+  return maior
+}
+
+/**
+ * Calcula o percentual de gastos por contexto emocional
+ * @param {Array} transacoes - Lista de transações
+ * @returns {Object} - Objeto com percentuais por contexto
+ */
+export function percentualPorContexto(transacoes) {
+  const contagem = {}
+  const valores = {}
+  const totalTransacoes = transacoes.length
+  const totalValor = transacoes.reduce((a, b) => a + b.valor, 0)
+  
+  transacoes.forEach(transacao => {
+    const contexto = transacao.contextoEmocional
+    contagem[contexto] = (contagem[contexto] || 0) + 1
+    valores[contexto] = (valores[contexto] || 0) + transacao.valor
+  })
+  
+  const resultado = {}
+  for (const contexto of Object.keys(contagem)) {
+    resultado[contexto] = {
+      ocorrencias: contagem[contexto],
+      percentualOcorrencias: (contagem[contexto] / totalTransacoes) * 100,
+      valorTotal: valores[contexto],
+      percentualValor: (valores[contexto] / totalValor) * 100
+    }
+  }
+  
+  return resultado
+}
+
+/**
+ * Calcula gastos por período do dia
+ * @param {Array} transacoes - Lista de transações
+ * @returns {Object} - Objeto com totais por período
+ */
+export function gastosPorPeriodo(transacoes) {
+  const periodos = { manha: 0, tarde: 0, noite: 0 }
+  const contagem = { manha: 0, tarde: 0, noite: 0 }
+  
+  transacoes.forEach(transacao => {
+    periodos[transacao.periodo] += transacao.valor
+    contagem[transacao.periodo]++
+  })
+  
+  const total = Object.values(periodos).reduce((a, b) => a + b, 0)
+  
+  return {
+    manha: {
+      valor: periodos.manha,
+      percentual: (periodos.manha / total) * 100,
+      quantidade: contagem.manha
+    },
+    tarde: {
+      valor: periodos.tarde,
+      percentual: (periodos.tarde / total) * 100,
+      quantidade: contagem.tarde
+    },
+    noite: {
+      valor: periodos.noite,
+      percentual: (periodos.noite / total) * 100,
+      quantidade: contagem.noite
+    }
+  }
+}
+
+/**
+ * Calcula a média de gasto semanal
+ * @param {Array} transacoes - Lista de transações
+ * @returns {number} - Média semanal
+ */
+export function mediaSemanal(transacoes) {
+  const totalGasto = transacoes.reduce((a, b) => a + b.valor, 0)
+  // Assumindo 4 semanas no mês
+  return totalGasto / 4
+}
+
+/**
+ * Calcula a variação percentual de uma categoria em relação ao total
+ * @param {Array} transacoes - Lista de transações
+ * @param {string} categoria - Nome da categoria
+ * @returns {number} - Percentual da categoria
+ */
+export function variacaoCategoria(transacoes, categoria) {
+  const totais = totalPorCategoria(transacoes)
+  const totalGeral = Object.values(totais).reduce((a, b) => a + b, 0)
+  
+  return ((totais[categoria] || 0) / totalGeral) * 100
+}
+
+/**
+ * Calcula a reserva sugerida (20% da renda)
+ * @param {number} rendaMensal - Renda mensal da usuária
+ * @returns {Object} - Objeto com valor da reserva e detalhes
+ */
+export function calcularReserva(rendaMensal) {
+  const valorReserva = rendaMensal * 0.2
+  return {
+    valor: valorReserva,
+    percentual: 20,
+    metaAnual: valorReserva * 12
+  }
+}
+
+/**
+ * Calcula o potencial de economia mensal
+ * @param {Array} transacoes - Lista de transações
+ * @returns {Object} - Potencial de economia identificado
+ */
+export function potencialEconomia(transacoes) {
+  // Identifica gastos por impulso (tedio_noturno e busca_validacao)
+  const gastosImpulso = transacoes.filter(t => 
+    t.contextoEmocional === 'tedio_noturno' || 
+    t.contextoEmocional === 'busca_validacao'
+  )
+  
+  const totalImpulso = gastosImpulso.reduce((a, b) => a + b.valor, 0)
+  const totalGeral = transacoes.reduce((a, b) => a + b.valor, 0)
+  
+  // Sugerimos economizar 30% dos gastos por impulso
+  const economiasugerida = totalImpulso * 0.3
+  
+  return {
+    gastosImpulso: totalImpulso,
+    percentualImpulso: (totalImpulso / totalGeral) * 100,
+    economiaSugerida: economiasugerida,
+    quantidadeTransacoes: gastosImpulso.length
+  }
+}
+
+/**
+ * Calcula o total gasto no mês
+ * @param {Array} transacoes - Lista de transações
+ * @returns {number} - Total gasto
+ */
+export function totalGasto(transacoes) {
+  return transacoes.reduce((a, b) => a + b.valor, 0)
+}
+
+/**
+ * Retorna os maiores gastos do mês
+ * @param {Array} transacoes - Lista de transações
+ * @param {number} quantidade - Quantidade de gastos a retornar
+ * @returns {Array} - Lista dos maiores gastos
+ */
+export function maioresGastos(transacoes, quantidade = 5) {
+  return [...transacoes]
+    .sort((a, b) => b.valor - a.valor)
+    .slice(0, quantidade)
+}
+
+/**
+ * Calcula gastos por dia da semana
+ * @param {Array} transacoes - Lista de transações
+ * @returns {Object} - Gastos agrupados por dia
+ */
+export function gastosPorDiaSemana(transacoes) {
+  const dias = {
+    segunda: { valor: 0, quantidade: 0 },
+    terca: { valor: 0, quantidade: 0 },
+    quarta: { valor: 0, quantidade: 0 },
+    quinta: { valor: 0, quantidade: 0 },
+    sexta: { valor: 0, quantidade: 0 },
+    sabado: { valor: 0, quantidade: 0 },
+    domingo: { valor: 0, quantidade: 0 }
+  }
+  
+  transacoes.forEach(t => {
+    if (dias[t.diaSemana]) {
+      dias[t.diaSemana].valor += t.valor
+      dias[t.diaSemana].quantidade++
+    }
+  })
+  
+  return dias
+}
+
+/**
+ * Formata valor em Real brasileiro
+ * @param {number} valor - Valor a ser formatado
+ * @returns {string} - Valor formatado
+ */
+export function formatarMoeda(valor) {
+  return valor.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  })
+}
+
+/**
+ * Formata percentual
+ * @param {number} valor - Valor do percentual
+ * @returns {string} - Percentual formatado
+ */
+export function formatarPercentual(valor) {
+  return `${valor.toFixed(1)}%`
+}

@@ -6,4 +6,5 @@ export const ROUTE_PATHS = {
   dashboard: "/dashboard",
   profile: "/profile",
   analytics: "/analytics",
+  archetypes: "/archetypes",
 } as const;

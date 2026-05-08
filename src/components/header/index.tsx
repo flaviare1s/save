@@ -87,7 +87,7 @@ export const Header = () => {
             </span>
           </NavLink>
 
-          <NavLink to={ROUTE_PATHS.profile} className={getNavLinkClassName}>
+          <NavLink to={ROUTE_PATHS.archetypes} className={getNavLinkClassName}>
             <Drama className="h-5 w-5" />
             <span className="hidden text-sm font-medium sm:inline">
               <span className="hidden lg:inline">Meu</span> Arquétipo

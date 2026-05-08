@@ -1,26 +1,20 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { GraficoContexto } from "./context-graphic";
+import { HeatmapSemanal } from "./weekly-heatmap";
+import { InsightCard } from "./insight-card";
 import { useAuth } from "../../contexts/auth-context";
-import { getDashboardData } from "../../firebase/dashboard";
-import type { DashboardData } from "../../firebase/dashboard-types";
+import { mockContextos, mockTransacoes, mockInsights } from "./mock-data";
 
 export function Analytics() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/login");
     }
   }, [loading, user, navigate]);
-
-  useEffect(() => {
-    if (user) {
-      getDashboardData(user.uid).then(setDashboardData);
-    }
-  }, [user]);
 
   if (loading) {
     return (
@@ -30,33 +24,9 @@ export function Analytics() {
     );
   }
 
-  if (!user || !dashboardData) {
+  if (!user) {
     return null;
   }
-
-  // Dados de contextos emocionais (mockado por enquanto)
-  const contextos = {
-    pos_trabalho_exaustivo: {
-      valorTotal: 1200,
-      percentualValor: 30,
-    },
-    fomo_social: {
-      valorTotal: 800,
-      percentualValor: 20,
-    },
-    ansiedade_futuro: {
-      valorTotal: 600,
-      percentualValor: 15,
-    },
-    busca_validacao: {
-      valorTotal: 900,
-      percentualValor: 22.5,
-    },
-    tedio_noturno: {
-      valorTotal: 500,
-      percentualValor: 12.5,
-    },
-  };
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-8 pb-24">
@@ -66,25 +36,47 @@ export function Analytics() {
           Sua jornada de consumo
         </h1>
         <p className="text-text mt-1">
-          Entenda os padroes emocionais por tras das suas compras
+          Entenda os padrões emocionais por trás das suas compras
         </p>
       </div>
 
       {/* Grafico de contexto emocional */}
       <div className="mb-8">
-        <GraficoContexto dados={contextos} />
+        <GraficoContexto dados={mockContextos} />
+      </div>
+
+      {/* Cards de insights */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold text-text-strong mb-4">
+          Insights sobre seu consumo
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {mockInsights.map((insight, index) => (
+            <InsightCard
+              key={index}
+              emoji={insight.emoji}
+              titulo={insight.titulo}
+              descricao={insight.descricao}
+              destaque={insight.destaque}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Heatmap semanal */}
+      <div className="mb-8">
+        <HeatmapSemanal transacoes={mockTransacoes} />
       </div>
 
       {/* CTA para ver mais */}
-      <div className="bg-linear-to-r from-primary to-secondary rounded-2xl p-8 text-center">
+      <div className="bg-linear-to-r from-primary to-tertiary rounded-2xl p-8 text-center">
         <h2 className="text-xl md:text-2xl font-bold mb-3 text-text-strong">
           Pronta para explorar mais insights?
         </h2>
-        <p className="text-text mb-6 max-w-md mx-auto">
-          Com base nos seus padroes, temos mais analises para voce.
+        <p className="text-black mb-6 max-w-md mx-auto">
+          Com base nos seus padrões, temos mais análises para você.
         </p>
-        <button
-          onClick={() => navigate("/dashboard")}
+        <Link to="/dashboard"
           className="inline-flex items-center gap-2 bg-text-strong text-bg font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-opacity"
         >
           Voltar ao Dashboard
@@ -101,7 +93,7 @@ export function Analytics() {
               d="M13 7l5 5m0 0l-5 5m5-5H6"
             />
           </svg>
-        </button>
+        </Link>
       </div>
     </main>
   );

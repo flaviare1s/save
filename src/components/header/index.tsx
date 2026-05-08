@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, LogIn, LogOut, SlidersHorizontal, UserRound } from 'lucide-react'
+import { ChartLine, DiamondPlus, Drama, LayoutDashboard, LogIn, LogOut } from 'lucide-react'
 import { signOut } from 'firebase/auth'
 
 import logo from '../../assets/images/logo.png'
@@ -51,7 +51,7 @@ export const Header = () => {
             className="h-12 w-12 rounded-full object-cover"
           />
           <h1
-            className="m-0 text-2xl sm:text-3xl font-semibold leading-none tracking-[-0.04em] mt-1"
+            className="m-0 text-2xl sm:text-3xl font-semibold leading-none tracking-[-0.04em] mt-1 hidden sm:block"
             style={brandTitleStyle}
           >
             Save
@@ -59,19 +59,32 @@ export const Header = () => {
         </Link>
 
         <nav className="flex items-center gap-2">
-          <NavLink to={ROUTE_PATHS.onboarding} className={getNavLinkClassName}>
-            <SlidersHorizontal className="h-5 w-5" />
-            <span className="hidden text-sm font-medium sm:inline">Onboarding</span>
-          </NavLink>
-
           <NavLink to={ROUTE_PATHS.dashboard} className={getNavLinkClassName}>
             <LayoutDashboard className="h-5 w-5" />
-            <span className="hidden text-sm font-medium sm:inline">Dashboard</span>
+            <span className="hidden text-sm font-medium sm:inline">
+              Dashboard
+            </span>
+          </NavLink>
+
+          <NavLink to={ROUTE_PATHS.onboarding} className={getNavLinkClassName}>
+            <DiamondPlus className="h-5 w-5" />
+            <span className="hidden text-sm font-medium sm:inline">
+              Novo Gasto
+            </span>
+          </NavLink>
+
+          <NavLink to={ROUTE_PATHS.analytics} className={getNavLinkClassName}>
+            <ChartLine className="h-5 w-5" />
+            <span className="hidden text-sm font-medium sm:inline">
+              Análise
+            </span>
           </NavLink>
 
           <NavLink to={ROUTE_PATHS.profile} className={getNavLinkClassName}>
-            <UserRound className="h-5 w-5" />
-            <span className="hidden text-sm font-medium sm:inline">Profile</span>
+            <Drama className="h-5 w-5" />
+            <span className="hidden text-sm font-medium sm:inline">
+              Meu Arquétipo
+            </span>
           </NavLink>
 
           {user ? (
@@ -81,16 +94,20 @@ export const Header = () => {
               className={`${linkBaseClassName} bg-transparent hover:bg-white/6 cursor-pointer`}
             >
               <LogOut className="h-5 w-5" />
-              <span className="hidden text-sm font-medium sm:inline">Logout</span>
+              <span className="hidden text-sm font-medium sm:inline">
+                Logout
+              </span>
             </button>
           ) : (
             <NavLink to={ROUTE_PATHS.login} className={getNavLinkClassName}>
               <LogIn className="h-5 w-5" />
-              <span className="hidden text-sm font-medium sm:inline">Login</span>
+              <span className="hidden text-sm font-medium sm:inline">
+                Login
+              </span>
             </NavLink>
           )}
         </nav>
       </div>
     </header>
-  )
+  );
 }

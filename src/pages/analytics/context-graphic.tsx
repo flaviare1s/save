@@ -43,7 +43,10 @@ interface GraficoContextoProps {
   dados: ContextData;
 }
 
-const CustomTooltip = (props: { active?: boolean; payload?: Array<{ payload: FormattedData }> }) => {
+const CustomTooltip = (props: {
+  active?: boolean;
+  payload?: Array<{ payload: FormattedData }>;
+}) => {
   const { active, payload } = props;
   if (active && payload && payload.length) {
     const data = payload[0].payload as FormattedData;

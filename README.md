@@ -106,7 +106,7 @@ src/
 
  
 - [Flávia Reis de Almeida](https://github.com/flaviare1s)
-- [Izabella Maria Pessoa Lins](https://github.com/izabella-mizabella-m)
+- [Izabella Maria Pessoa Lins](https://github.com/izabella-m)
 - [Mayara Amâncio Zaltrão](https://github.com/maayamancio/maayamancio)
 
 ## 📝 Scripts Disponíveis

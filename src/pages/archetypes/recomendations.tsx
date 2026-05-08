@@ -1,4 +1,10 @@
-export function Recomendations({ numero, texto, cor }) {
+type RecomendationsProps = {
+  numero: string | number
+  texto: string
+  cor: string
+}
+
+export function Recomendations({ numero, texto, cor }: RecomendationsProps) {
   return (
     <div className="bg-card rounded-2xl border border-border p-5 shadow-sm hover:shadow-md transition-all hover:scale-[1.01]">
       <div className="flex items-start gap-4">

@@ -50,12 +50,12 @@ export const Header = () => {
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link
           to={ROUTE_PATHS.home}
-          className="flex flex-shrink-0 items-center justify-center gap-3 rounded-full px-3 py-2 transition-colors"
+          className="flex shrink-0 items-center justify-center gap-3 rounded-full px-3 py-2 transition-colors"
         >
           <img
             src={logo}
             alt="Save"
-            className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0"
+            className="h-10 w-10 sm:h-12 sm:w-12 shrink-0"
           />
           <h1
             className="m-0 text-2xl sm:text-3xl font-semibold leading-none tracking-[-0.04em] mt-1 hidden md:block"

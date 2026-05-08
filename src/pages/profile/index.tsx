@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/auth-context'
 import { getDashboardData, updateDashboardSettings } from '../../firebase/dashboard'
 import type { CategorySpend, DashboardData } from '../../firebase/dashboard-types'
+import { syncDashboardFromTransactions } from '../../firebase/transactions'
 import { markProfileAsCompleted } from '../../firebase/user-status'
 import { ROUTE_PATHS } from '../../routes/paths'
 
@@ -23,7 +24,7 @@ const inputClassName =
   'w-full rounded-2xl border-0 bg-white/6 px-4 py-3 text-[var(--text-strong)] outline-none ring-1 ring-white/8 placeholder:text-[var(--text)] focus:ring-[var(--primary)]'
 
 const parseMoneyInput = (value: string) => {
-  const parsedValue = Number(value)
+  const parsedValue = Number(value.replace(/\./g, '').replace(',', '.'))
   return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 0
 }
 
@@ -99,7 +100,7 @@ export const Profile = () => {
     }
 
   const handleCategoryChange =
-    (index: number, field: 'amount' | 'budget') =>
+    (index: number, field: 'budget') =>
     (event: ChangeEvent<HTMLInputElement>) => {
       if (!form) {
         return
@@ -135,12 +136,13 @@ export const Profile = () => {
     setMessage('')
 
     try {
-      const nextData = await updateDashboardSettings(user.uid, dashboardData, {
+      await updateDashboardSettings(user.uid, dashboardData, {
         income,
         monthlyBudget,
         savingsGoal,
         categories,
       })
+      const nextData = await syncDashboardFromTransactions(user.uid)
 
       await markProfileAsCompleted(user.uid)
       await refreshUserStatus()
@@ -196,7 +198,7 @@ export const Profile = () => {
         </h1>
         <p className="mt-3 text-sm text-(--text)">
           Ajuste sua renda, seu orçamento mensal, sua meta de economia e os
-          valores de cada categoria.
+          limites de cada categoria.
         </p>
       </div>
 
@@ -251,7 +253,7 @@ export const Profile = () => {
                     {category.name}
                   </p>
                   <p className="text-xs text-(--text)">
-                    Ajuste gasto atual e limite da categoria.
+                    O gasto atual vem das transações; aqui você ajusta o limite.
                   </p>
                 </div>
 
@@ -261,13 +263,13 @@ export const Profile = () => {
                     type="number"
                     min="0"
                     value={category.amount}
-                    onChange={handleCategoryChange(index, 'amount')}
-                    className={inputClassName}
+                    readOnly
+                    className={`${inputClassName} cursor-not-allowed opacity-60`}
                   />
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm text-(--text)">Meta</span>
+                  <span className="text-sm text-(--text)">Limite mensal</span>
                   <input
                     type="number"
                     min="0"

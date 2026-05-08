@@ -1,4 +1,4 @@
-type ArquetipoDef = {
+export type ArquetipoDef = {
   id: string;
   nome: string;
   nomeIngles: string;
@@ -15,6 +15,20 @@ type ArquetipoDef = {
   recomendacoes: string[];
 };
 
+export type ArquetipoTransaction = {
+  valor: number;
+  categoria: string;
+  contextoEmocional?: string;
+  periodo?: string;
+  diaSemana?: string;
+};
+
+export type ArquetipoDetectado = ArquetipoDef & {
+  percentualMatch: number;
+  scores: Record<string, number>;
+  detalhes: Record<string, number>;
+};
+
 export const arquetipos: ArquetipoDef[] = [
   {
     id: "curadora_conforto",
@@ -25,18 +39,18 @@ export const arquetipos: ArquetipoDef[] = [
     corSecundaria: "#F0E6FF",
     gatilho: "Sobrecarga mental e esgotamento físico",
     comportamento:
-      "Gastos concentrados em delivery premium, skincare, velas e streaming após dias exaustivos.",
+      "Gastos concentrados em delivery, itens para casa, skincare e pequenos confortos depois de dias pesados.",
     insightEspelho:
       "Você busca no consumo o abraço que o dia não te deu. Seu lar é seu santuário, mas cuidado para não mobiliar sua paz com boletos.",
     poderDeEscolha:
-      "Que tal transformar um desses pedidos de delivery na sua 'Reserva de Sossego'?",
+      "Transforme parte dos gastos de alívio imediato em uma reserva que também cuide de você amanhã.",
     nomeDaReserva: "Reserva de Sossego 🕯️",
     categoriasDominantes: ["alimentacao", "conforto"],
     contextoGatilho: "pos_trabalho_exaustivo",
     recomendacoes: [
-      "Crie um ritual de R$30/semana para conforto — e transfira o restante para sua reserva",
-      "Troque 1 delivery por semana por uma 'noite gourmet em casa'. Economia: ~R$200/mês",
-      "Monte sua 'Caixinha do Sossego': automatize R$100/mês",
+      "Crie um ritual semanal de conforto com teto definido e transfira o restante para a reserva.",
+      "Troque um delivery por semana por uma noite especial em casa.",
+      "Automatize uma pequena transferência mensal para a sua Reserva de Sossego.",
     ],
   },
   {
@@ -46,20 +60,20 @@ export const arquetipos: ArquetipoDef[] = [
     emoji: "🥂",
     cor: "#E91E8C",
     corSecundaria: "#FFE6F5",
-    gatilho: "Necessidade de pertencimento ou medo de isolamento (FOMO)",
+    gatilho: "Necessidade de pertencimento ou medo de ficar de fora",
     comportamento:
-      "Gastos em bares badalados, presentes para amigas e eventos sociais. Ela é quem aceita viagens de última hora.",
+      "Gastos em bares, presentes, viagens rápidas e convites sociais que parecem difíceis de recusar.",
     insightEspelho:
-      "Sua generosidade é vibrante. Você investe em memórias, mas lembre-se: sua presença é o maior presente, não o que você consome.",
+      "Sua generosidade é vibrante. Você investe em memórias, mas sua presença é o maior presente, não o consumo em volta dela.",
     poderDeEscolha:
-      "Sua reserva para o futuro garantirá que você continue sendo a alma da festa por muitos anos.",
+      "Planejar experiências com antecedência mantém a conexão viva sem atropelar sua segurança financeira.",
     nomeDaReserva: "Reserva de Conexão 🥂",
     categoriasDominantes: ["social"],
     contextoGatilho: "fomo_social",
     recomendacoes: [
-      "Proponha encontros em casa mensalmente — a memória é a mesma, o custo não",
-      "Crie um 'fundo de experiências' conjunto com amigas para viagens planejadas",
-      "Defina um teto mensal para programas sociais e comemore quando cumprir",
+      "Defina um teto mensal para programas sociais antes de aceitar novos convites.",
+      "Proponha encontros em casa ou planos compartilhados de menor custo.",
+      "Separe um fundo de experiências para viagens e eventos planejados.",
     ],
   },
   {
@@ -71,374 +85,412 @@ export const arquetipos: ArquetipoDef[] = [
     corSecundaria: "#E3F2FD",
     gatilho: "Insegurança com o futuro ou necessidade de controle",
     comportamento:
-      "Gastos em cursos, livros e gadgets de produtividade. O gatilho é a ansiedade de 'não estar pronta'.",
+      "Gastos em cursos, livros, ferramentas e produtividade para sentir que está se preparando melhor.",
     insightEspelho:
-      "Você é movida por evolução. Seu consumo foca no eu do futuro, mas cuidado para não comprar ferramentas que nunca terá tempo de usar.",
+      "Você é movida por evolução. O consumo foca no eu do futuro, mas liberdade também nasce do dinheiro preservado no presente.",
     poderDeEscolha:
-      "Investir em conhecimento é ótimo, mas ter dinheiro em conta é a maior ferramenta de liberdade que existe.",
+      "Conhecimento aplicado e reserva financeira caminham juntos: um expande possibilidades, o outro sustenta escolhas.",
     nomeDaReserva: "Reserva de Liberdade 📚",
     categoriasDominantes: ["autodesenvolvimento"],
     contextoGatilho: "ansiedade_futuro",
     recomendacoes: [
-      "Antes de comprar um curso, termine o que já tem. Seus investimentos merecem ser aplicados",
-      "Crie uma lista de espera de 7 dias para compras de autodesenvolvimento",
-      "Conhecimento + reserva = liberdade real. Meta: guardar até dezembro",
+      "Antes de comprar um curso, conclua ou descarte conscientemente um que já existe.",
+      "Use uma lista de espera de 7 dias para compras de autodesenvolvimento.",
+      "Direcione parte do orçamento de aprendizado para uma reserva de liberdade.",
     ],
   },
   {
     id: "alquimista_estetica",
     nome: "A Alquimista da Estética",
     nomeIngles: "The Aesthetic Alchemist",
+    emoji: "✨",
     cor: "#c084fc",
     corSecundaria: "#FFF8E1",
     gatilho: "Baixa autoestima momentânea ou busca por validação",
     comportamento:
-      "Compras por impulso em moda e procedimentos estéticos, geralmente após comparações em redes sociais.",
+      "Compras em moda, beleza e procedimentos quando a autoconfiança fica dependente de uma próxima versão de si.",
     insightEspelho:
       "Você tem um olhar apurado para o belo. O desafio é não deixar que sua confiança dependa da próxima etiqueta.",
     poderDeEscolha:
-      "R$150 em uma peça que você usará pouco podem ser o início da sua 'Liberdade de Estilo'.",
+      "Escolher menos e melhor pode transformar estilo em expressão, não em pressão.",
     nomeDaReserva: "Liberdade de Estilo ✨",
     categoriasDominantes: ["moda", "beleza"],
     contextoGatilho: "busca_validacao",
     recomendacoes: [
-      "Faça um detox de redes: 24h sem stories antes de qualquer compra de moda",
-      "Invista em 3 peças de qualidade por trimestre em vez de 10 rápidas",
-      "Seu estilo é poderoso. Canalize R$150/mês para a 'Liberdade de Estilo'",
+      "Espere 24 horas antes de compras ligadas a moda ou beleza.",
+      "Invista em poucas peças de alta qualidade em vez de várias compras rápidas.",
+      "Direcione um valor fixo mensal para a Liberdade de Estilo.",
     ],
   },
   {
     id: "refugiada_digital",
     nome: "A Refugiada Digital",
     nomeIngles: "The Digital Refugee",
+    emoji: "📱",
     cor: "#00BCD4",
     corSecundaria: "#E0F7FA",
     gatilho: "Tédio, procrastinação ou escapismo",
     comportamento:
-      "Pequenas comprinhas em apps e sites durante a noite. Gastos fragmentados de R$20-50 que somam montantes altos.",
+      "Pequenas compras em apps, assinaturas e carrinhos noturnos que parecem leves, mas somam rápido.",
     insightEspelho:
-      "O scroll infinito virou consumo infinito. Você gasta para preencher o tempo ou aliviar o tédio do dia a dia.",
+      "O scroll infinito virou consumo infinito. Você gasta para preencher tempo, aliviar tédio ou escapar do excesso do dia.",
     poderDeEscolha:
-      "Essas pequenas gotas de consumo estão esvaziando o balde da sua grande viagem. Troque o clique do tédio pelo clique do investimento.",
+      "Trocar o clique automático por uma pausa consciente devolve tempo, dinheiro e atenção para você.",
     nomeDaReserva: "Reserva da Grande Viagem 📱",
     categoriasDominantes: ["digital"],
     contextoGatilho: "tedio_noturno",
     recomendacoes: [
-      "Instale um bloqueador de apps de compra após 21h por 30 dias",
-      "Regra dos 7 dias: adicionou no carrinho? Espere 7 dias antes de comprar",
-      "Some todas as comprinhas do mês — o número vai te surpreender. Redirecione metade",
+      "Bloqueie apps de compra depois das 21h por 30 dias.",
+      "Use a regra dos 7 dias para itens adicionados ao carrinho à noite.",
+      "Some as pequenas compras do mês e redirecione metade para uma meta concreta.",
+    ],
+  },
+  {
+    id: "nerd_colecionadora",
+    nome: "A Nerd Colecionadora",
+    nomeIngles: "The Nerd Collector",
+    emoji: "🎮",
+    cor: "#7C3AED",
+    corSecundaria: "#EDE9FE",
+    gatilho: "Entusiasmo por novidades, coleções e pertencimento a universos de interesse",
+    comportamento:
+      "Gastos em produtos digitais, itens colecionáveis, livros, jogos, tecnologia e hobbies que alimentam identidade.",
+    insightEspelho:
+      "Sua curiosidade cria mundos. Só vale cuidar para que cada nova aquisição tenha espaço real na sua rotina e no seu orçamento.",
+    poderDeEscolha:
+      "Colecionar também pode ser curadoria: escolher melhor deixa cada compra mais significativa.",
+    nomeDaReserva: "Reserva de Universo Próprio 🎮",
+    categoriasDominantes: ["digital", "autodesenvolvimento"],
+    contextoGatilho: "ansiedade_futuro",
+    recomendacoes: [
+      "Crie uma wishlist e compre apenas o item mais desejado após 15 dias.",
+      "Defina um teto específico para hobbies e coleções.",
+      "Revise assinaturas e produtos digitais que já não fazem parte da sua rotina.",
     ],
   },
 ];
 
-/**
- * Detecta o arquétipo de consumo baseado nas transações
- *
- * REGRAS DE DETECÇÃO DOS 5 ARQUÉTIPOS:
- *
- * A Curadora de Conforto:
- * - contextoEmocional 'pos_trabalho_exaustivo' representa > 30% dos gastos
- * - OU categorias 'alimentacao/delivery' + 'conforto' somam > 40%
- *
- * A Arquiteta de Conexões:
- * - categoria 'social' representa > 35% dos gastos
- * - OU contexto 'fomo_social' representa > 25% das ocorrências
- *
- * A Visionária Pragmática:
- * - categoria 'autodesenvolvimento' representa > 30% dos gastos
- * - OU contexto 'ansiedade_futuro' representa > 30% das ocorrências
- *
- * A Alquimista da Estética:
- * - categorias 'moda' + 'beleza' somam > 40% dos gastos
- * - OU contexto 'busca_validacao' representa > 25% das ocorrências
- *
- * A Refugiada Digital:
- * - contexto 'tedio_noturno' representa > 30% das ocorrências
- * - OU categoria 'digital' representa > 30% dos gastos
- * - OU mais de 40% das transações ocorrem no período 'noite'
- *
- * @param {Array} transacoes - Lista de transações da usuária
- * @returns {Object} - Arquétipo detectado com todas as informações
- */
+const byId = new Map(arquetipos.map((arquetipo) => [arquetipo.id, arquetipo]));
+
+const sumValues = (transactions: ArquetipoTransaction[]) => {
+  return transactions.reduce((sum, transaction) => sum + transaction.valor, 0);
+};
+
+const safePercent = (part: number, total: number) => {
+  return total > 0 ? (part / total) * 100 : 0;
+};
+
+const categoryValue = (
+  transactions: ArquetipoTransaction[],
+  categories: string[],
+) => {
+  return sumValues(
+    transactions.filter((transaction) =>
+      categories.includes(transaction.categoria),
+    ),
+  );
+};
+
+const contextValue = (
+  transactions: ArquetipoTransaction[],
+  context: string,
+) => {
+  return sumValues(
+    transactions.filter(
+      (transaction) => transaction.contextoEmocional === context,
+    ),
+  );
+};
+
+const contextCount = (
+  transactions: ArquetipoTransaction[],
+  context: string,
+) => {
+  return transactions.filter(
+    (transaction) => transaction.contextoEmocional === context,
+  ).length;
+};
+
+const periodCount = (
+  transactions: ArquetipoTransaction[],
+  period: string,
+) => {
+  return transactions.filter((transaction) => transaction.periodo === period)
+    .length;
+};
+
+const getScoreDetails = (transactions: ArquetipoTransaction[]) => {
+  const totalValue = sumValues(transactions);
+  const totalCount = transactions.length;
+  const modaBeleza = categoryValue(transactions, ["moda", "beleza"]);
+  const alimentacaoConforto = categoryValue(transactions, [
+    "alimentacao",
+    "conforto",
+  ]);
+  const digital = categoryValue(transactions, ["digital"]);
+  const autodesenvolvimento = categoryValue(transactions, [
+    "autodesenvolvimento",
+  ]);
+  const social = categoryValue(transactions, ["social"]);
+  const smallNightCount = transactions.filter(
+    (transaction) =>
+      transaction.periodo === "noite" &&
+      transaction.valor > 0 &&
+      transaction.valor <= 80,
+  ).length;
+
+  return {
+    percentualPosTrabalho: safePercent(
+      contextValue(transactions, "pos_trabalho_exaustivo"),
+      totalValue,
+    ),
+    percentualAlimentacaoConforto: safePercent(
+      alimentacaoConforto,
+      totalValue,
+    ),
+    percentualSocial: safePercent(social, totalValue),
+    percentualFomo: safePercent(
+      contextCount(transactions, "fomo_social"),
+      totalCount,
+    ),
+    percentualAutodesenvolvimento: safePercent(
+      autodesenvolvimento,
+      totalValue,
+    ),
+    percentualAnsiedade: safePercent(
+      contextCount(transactions, "ansiedade_futuro"),
+      totalCount,
+    ),
+    percentualModaBeleza: safePercent(modaBeleza, totalValue),
+    percentualValidacao: safePercent(
+      contextCount(transactions, "busca_validacao"),
+      totalCount,
+    ),
+    percentualTedio: safePercent(
+      contextCount(transactions, "tedio_noturno"),
+      totalCount,
+    ),
+    percentualDigital: safePercent(digital, totalValue),
+    percentualNoite: safePercent(periodCount(transactions, "noite"), totalCount),
+    percentualPequenasComprasNoturnas: safePercent(smallNightCount, totalCount),
+  };
+};
+
 export function detectarArquetipo(
-  transacoes: {
-    valor: number;
-    categoria: string;
-    contextoEmocional: string;
-    periodo: string;
-    diaSemana?: string;
-  }[],
-): ArquetipoDef & {
-  percentualMatch: number;
-  scores: Record<string, number>;
-  detalhes: any;
-} {
-  const totalGeral = transacoes.reduce((a, b) => a + b.valor, 0);
-  const totalTransacoes = transacoes.length;
-
-  // Calcula totais por categoria
-  const totaisPorCategoria: Record<string, number> = {};
-  transacoes.forEach((t) => {
-    totaisPorCategoria[t.categoria] =
-      (totaisPorCategoria[t.categoria] || 0) + t.valor;
-  });
-
-  // Calcula contagem por contexto emocional
-  const contagemPorContexto: Record<string, number> = {};
-  const valoresPorContexto: Record<string, number> = {};
-  transacoes.forEach((t) => {
-    contagemPorContexto[t.contextoEmocional] =
-      (contagemPorContexto[t.contextoEmocional] || 0) + 1;
-    valoresPorContexto[t.contextoEmocional] =
-      (valoresPorContexto[t.contextoEmocional] || 0) + t.valor;
-  });
-
-  // Calcula contagem por período
-  const contagemPorPeriodo: Record<string, number> = {};
-  transacoes.forEach((t) => {
-    contagemPorPeriodo[t.periodo] = (contagemPorPeriodo[t.periodo] || 0) + 1;
-  });
-
-  // Objeto para armazenar scores de cada arquétipo
-  const scores = {
-    curadora_conforto: 0,
-    arquiteta_conexoes: 0,
-    visionaria_pragmatica: 0,
-    alquimista_estetica: 0,
-    refugiada_digital: 0,
+  transacoes: ArquetipoTransaction[],
+): ArquetipoDetectado {
+  const detalhes = getScoreDetails(transacoes);
+  const scores: Record<string, number> = {
+    curadora_conforto:
+      detalhes.percentualPosTrabalho * 0.45 +
+      detalhes.percentualAlimentacaoConforto * 0.4 +
+      detalhes.percentualNoite * 0.15,
+    arquiteta_conexoes:
+      detalhes.percentualSocial * 0.6 +
+      detalhes.percentualFomo * 0.4,
+    visionaria_pragmatica:
+      detalhes.percentualAutodesenvolvimento * 0.6 +
+      detalhes.percentualAnsiedade * 0.4,
+    alquimista_estetica:
+      detalhes.percentualModaBeleza * 0.65 +
+      detalhes.percentualValidacao * 0.35,
+    refugiada_digital:
+      detalhes.percentualDigital * 0.35 +
+      detalhes.percentualTedio * 0.3 +
+      detalhes.percentualNoite * 0.2 +
+      detalhes.percentualPequenasComprasNoturnas * 0.15,
+    nerd_colecionadora:
+      detalhes.percentualDigital * 0.25 +
+      detalhes.percentualAutodesenvolvimento * 0.25 +
+      detalhes.percentualAnsiedade * 0.2 +
+      detalhes.percentualTedio * 0.15 +
+      detalhes.percentualPequenasComprasNoturnas * 0.15,
   };
 
-  // Calcula percentuais relevantes
-  const percentualPosTrabalho =
-    ((valoresPorContexto["pos_trabalho_exaustivo"] || 0) / totalGeral) * 100;
-  const percentualAlimentacaoConforto =
-    (((totaisPorCategoria["alimentacao"] || 0) +
-      (totaisPorCategoria["conforto"] || 0)) /
-      totalGeral) *
-    100;
-  const percentualSocial =
-    ((totaisPorCategoria["social"] || 0) / totalGeral) * 100;
-  const percentualFomo =
-    ((contagemPorContexto["fomo_social"] || 0) / totalTransacoes) * 100;
-  const percentualAutodesenvolvimento =
-    ((totaisPorCategoria["autodesenvolvimento"] || 0) / totalGeral) * 100;
-  const percentualAnsiedade =
-    ((contagemPorContexto["ansiedade_futuro"] || 0) / totalTransacoes) * 100;
-  const percentualModaBeleza =
-    (((totaisPorCategoria["moda"] || 0) + (totaisPorCategoria["beleza"] || 0)) /
-      totalGeral) *
-    100;
-  const percentualValidacao =
-    ((contagemPorContexto["busca_validacao"] || 0) / totalTransacoes) * 100;
-  const percentualTedio =
-    ((contagemPorContexto["tedio_noturno"] || 0) / totalTransacoes) * 100;
-  const percentualDigital =
-    ((totaisPorCategoria["digital"] || 0) / totalGeral) * 100;
-  const percentualNoite =
-    ((contagemPorPeriodo["noite"] || 0) / totalTransacoes) * 100;
-
-  // Curadora de Conforto
-  if (percentualPosTrabalho > 30)
-    scores.curadora_conforto += percentualPosTrabalho;
-  if (percentualAlimentacaoConforto > 40)
-    scores.curadora_conforto += percentualAlimentacaoConforto;
-  scores.curadora_conforto +=
-    percentualPosTrabalho * 0.5 + percentualAlimentacaoConforto * 0.3;
-
-  // Arquiteta de Conexões
-  if (percentualSocial > 35) scores.arquiteta_conexoes += percentualSocial;
-  if (percentualFomo > 25) scores.arquiteta_conexoes += percentualFomo;
-  scores.arquiteta_conexoes += percentualSocial * 0.5 + percentualFomo * 0.5;
-
-  // Visionária Pragmática
-  if (percentualAutodesenvolvimento > 30)
-    scores.visionaria_pragmatica += percentualAutodesenvolvimento;
-  if (percentualAnsiedade > 30)
-    scores.visionaria_pragmatica += percentualAnsiedade;
-  scores.visionaria_pragmatica +=
-    percentualAutodesenvolvimento * 0.5 + percentualAnsiedade * 0.5;
-
-  // Alquimista da Estética
-  if (percentualModaBeleza > 40)
-    scores.alquimista_estetica += percentualModaBeleza;
-  if (percentualValidacao > 25)
-    scores.alquimista_estetica += percentualValidacao;
-  scores.alquimista_estetica +=
-    percentualModaBeleza * 0.5 + percentualValidacao * 0.5;
-
-  // Refugiada Digital
-  if (percentualTedio > 30) scores.refugiada_digital += percentualTedio;
-  if (percentualDigital > 30) scores.refugiada_digital += percentualDigital;
-  if (percentualNoite > 40) scores.refugiada_digital += percentualNoite * 0.5;
-  scores.refugiada_digital +=
-    percentualTedio * 0.3 + percentualDigital * 0.3 + percentualNoite * 0.2;
-
-  // Encontra o arquétipo com maior score
-  let arquetipoDetectado = "curadora_conforto";
-  let maiorScore = 0;
-
-  for (const [id, score] of Object.entries(scores)) {
-    if (score > maiorScore) {
-      maiorScore = score;
-      arquetipoDetectado = id;
-    }
-  }
-
-  // Busca os dados completos do arquétipo
-  const arquetipo = arquetipos.find((a) => a.id === arquetipoDetectado)!;
-
-  // Calcula o percentual de match (normalizado para 0-100)
-  const totalScores = Object.values(scores).reduce((a, b) => a + b, 0);
+  const [arquetipoDetectado, maiorScore] = Object.entries(scores).reduce(
+    (winner, current) => (current[1] > winner[1] ? current : winner),
+    ["curadora_conforto", 0],
+  );
+  const totalScores = Object.values(scores).reduce((sum, score) => sum + score, 0);
   const percentualMatch =
-    totalScores > 0 ? (maiorScore / totalScores) * 100 : 50;
+    maiorScore > 0 && totalScores > 0
+      ? Math.min(Math.max((maiorScore / totalScores) * 100, 45), 95)
+      : 0;
+  const arquetipo = byId.get(arquetipoDetectado) ?? arquetipos[0];
 
   return {
     ...arquetipo,
-    percentualMatch: Math.min(Math.max(percentualMatch, 40), 95), // Entre 40% e 95%
+    percentualMatch,
     scores,
-    detalhes: {
-      percentualPosTrabalho,
-      percentualAlimentacaoConforto,
-      percentualSocial,
-      percentualFomo,
-      percentualAutodesenvolvimento,
-      percentualAnsiedade,
-      percentualModaBeleza,
-      percentualValidacao,
-      percentualTedio,
-      percentualDigital,
-      percentualNoite,
-    },
+    detalhes,
   };
 }
 
-/**
- * Gera insights personalizados baseados no arquétipo e transações
- * @param {Object} arquetipo - Arquétipo detectado
- * @param {Array} transacoes - Lista de transações
- * @returns {Array} - Lista de insights personalizados
- */
+const formatCurrency = (value: number) => {
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+};
+
+const dominantCategoryValue = (
+  arquetipo: Pick<ArquetipoDef, "categoriasDominantes">,
+  transactions: ArquetipoTransaction[],
+) => {
+  return categoryValue(transactions, arquetipo.categoriasDominantes);
+};
+
 export function gerarInsights(
-  arquetipo: {
-    id: string;
-    contextoGatilho: string;
-    categoriasDominantes: string[];
-  },
-  transacoes: {
-    valor: number;
-    periodo: string;
-    contextoEmocional: string;
-    categoria: string;
-    diaSemana?: string;
-  }[],
+  arquetipo: Pick<
+    ArquetipoDef,
+    "id" | "contextoGatilho" | "categoriasDominantes"
+  >,
+  transacoes: ArquetipoTransaction[],
 ) {
-  const insights = [];
-  const totalGeral = transacoes.reduce((a, b) => a + b.valor, 0);
+  const totalGeral = sumValues(transacoes);
 
-  // Calcula métricas para os insights
-  const gastosNoite = transacoes.filter((t) => t.periodo === "noite");
-  const percentualNoite = (gastosNoite.length / transacoes.length) * 100;
-  const valorNoite = gastosNoite.reduce((a, b) => a + b.valor, 0);
+  if (!transacoes.length || totalGeral <= 0) {
+    return [
+      {
+        emoji: "✨",
+        texto:
+          "Registre alguns gastos para que o SAVE identifique padrões com mais confiança.",
+      },
+    ];
+  }
 
+  const gastosNoite = transacoes.filter((transaction) => transaction.periodo === "noite");
+  const percentualNoite = safePercent(gastosNoite.length, transacoes.length);
   const gastosContexto = transacoes.filter(
-    (t) => t.contextoEmocional === arquetipo.contextoGatilho,
+    (transaction) => transaction.contextoEmocional === arquetipo.contextoGatilho,
   );
-  const valorContexto = gastosContexto.reduce((a, b) => a + b.valor, 0);
-
-  const gastosCategorias = arquetipo.categoriasDominantes.reduce((acc, cat) => {
-    return (
-      acc +
-      transacoes
-        .filter((t) => t.categoria === cat)
-        .reduce((a, b) => a + b.valor, 0)
-    );
-  }, 0);
+  const valorContexto = sumValues(gastosContexto);
+  const gastosCategorias = dominantCategoryValue(arquetipo, transacoes);
 
   switch (arquetipo.id) {
     case "curadora_conforto":
-      insights.push({
-        emoji: "🕯️",
-        texto: `${((valorContexto / totalGeral) * 100).toFixed(0)}% dos seus gastos acontecem após dias exaustivos`,
-      });
-      insights.push({
-        emoji: "🏠",
-        texto: `Você gastou R$${gastosCategorias.toFixed(2)} em conforto esse mês. Isso é cuidado, mas também pode ser reserva.`,
-      });
-      insights.push({
-        emoji: "🌙",
-        texto: `${percentualNoite.toFixed(0)}% das suas compras são no período noturno`,
-      });
-      break;
+      return [
+        {
+          emoji: "🕯️",
+          texto: `${safePercent(valorContexto, totalGeral).toFixed(0)}% dos gastos vieram depois de dias exaustivos.`,
+        },
+        {
+          emoji: "🏠",
+          texto: `Conforto e alimentação somam ${formatCurrency(gastosCategorias)} no período.`,
+        },
+        {
+          emoji: "🌙",
+          texto: `${percentualNoite.toFixed(0)}% das compras aconteceram à noite.`,
+        },
+      ];
 
     case "arquiteta_conexoes":
-      insights.push({
-        emoji: "🥂",
-        texto: `Você foi generosa: R$${gastosCategorias.toFixed(2)} em programas sociais e presentes`,
-      });
-      insights.push({
-        emoji: "💝",
-        texto: `Sua vida social representa ${((gastosCategorias / totalGeral) * 100).toFixed(0)}% do orçamento — vibrante, mas pode ser otimizada`,
-      });
-      insights.push({
-        emoji: "📅",
-        texto: `${gastosContexto.length} transações motivadas por FOMO neste mês`,
-      });
-      break;
+      return [
+        {
+          emoji: "🥂",
+          texto: `Programas sociais e presentes somam ${formatCurrency(gastosCategorias)}.`,
+        },
+        {
+          emoji: "💝",
+          texto: `Sua vida social representa ${safePercent(gastosCategorias, totalGeral).toFixed(0)}% dos gastos.`,
+        },
+        {
+          emoji: "📅",
+          texto: `${gastosContexto.length} transações foram ligadas ao medo de ficar de fora.`,
+        },
+      ];
 
-    case "visionaria_pragmatica":
-      const cursosLivros = transacoes.filter(
-        (t) => t.categoria === "autodesenvolvimento",
+    case "visionaria_pragmatica": {
+      const comprasDeAprendizado = transacoes.filter(
+        (transaction) => transaction.categoria === "autodesenvolvimento",
       );
-      insights.push({
-        emoji: "📚",
-        texto: `${cursosLivros.length} compras de autodesenvolvimento esse mês. Quantas você já usou?`,
-      });
-      insights.push({
-        emoji: "🎯",
-        texto: `Você investiu R$${gastosCategorias.toFixed(2)} no eu do futuro. Mas e a reserva do eu presente?`,
-      });
-      insights.push({
-        emoji: "⏰",
-        texto: `${((gastosContexto.length / transacoes.length) * 100).toFixed(0)}% das compras foram motivadas por ansiedade com o futuro`,
-      });
-      break;
 
-    case "alquimista_estetica":
-      const gastosFinDeSemana = transacoes
-        .filter((t) => t.diaSemana === "sabado" || t.diaSemana === "domingo")
-        .filter((t) => t.categoria === "moda" || t.categoria === "beleza");
-      insights.push({
-        emoji: "✨",
-        texto: `${((gastosFinDeSemana.length / transacoes.filter((t) => t.categoria === "moda" || t.categoria === "beleza").length) * 100).toFixed(0)}% dos seus gastos em moda acontecem no fim de semana`,
-      });
-      insights.push({
-        emoji: "💄",
-        texto: `Você tem um gosto refinado. R$${gastosCategorias.toFixed(2)}/mês podem construir um guarda-roupa de qualidade COM sobra`,
-      });
-      insights.push({
-        emoji: "📱",
-        texto: `${gastosContexto.length} compras ligadas a busca de validação`,
-      });
-      break;
+      return [
+        {
+          emoji: "📚",
+          texto: `${comprasDeAprendizado.length} compras de autodesenvolvimento aparecem no período.`,
+        },
+        {
+          emoji: "🎯",
+          texto: `Você investiu ${formatCurrency(gastosCategorias)} no eu do futuro.`,
+        },
+        {
+          emoji: "⏰",
+          texto: `${safePercent(gastosContexto.length, transacoes.length).toFixed(0)}% das compras carregam ansiedade com o futuro.`,
+        },
+      ];
+    }
 
-    case "refugiada_digital":
+    case "alquimista_estetica": {
+      const gastosModaBeleza = transacoes.filter(
+        (transaction) =>
+          transaction.categoria === "moda" || transaction.categoria === "beleza",
+      );
+      const gastosFimDeSemana = gastosModaBeleza.filter(
+        (transaction) =>
+          transaction.diaSemana === "sabado" ||
+          transaction.diaSemana === "domingo",
+      );
+
+      return [
+        {
+          emoji: "✨",
+          texto: `${safePercent(gastosFimDeSemana.length, gastosModaBeleza.length).toFixed(0)}% dos gastos de moda e beleza acontecem no fim de semana.`,
+        },
+        {
+          emoji: "💄",
+          texto: `Moda e beleza somam ${formatCurrency(gastosCategorias)} no período.`,
+        },
+        {
+          emoji: "📱",
+          texto: `${gastosContexto.length} compras foram ligadas a busca de validação.`,
+        },
+      ];
+    }
+
+    case "refugiada_digital": {
       const pequenasCompras = transacoes.filter(
-        (t) => t.valor <= 50 && t.periodo === "noite",
+        (transaction) => transaction.valor <= 80 && transaction.periodo === "noite",
       );
-      insights.push({
-        emoji: "📱",
-        texto: `${pequenasCompras.length} pequenas compras noturnas esse mês. Somadas: R$${pequenasCompras.reduce((a, b) => a + b.valor, 0).toFixed(2)}`,
-      });
-      insights.push({
-        emoji: "🌙",
-        texto: `Seu horário de maior consumo é entre 20h e 00h. O carrinho nunca dorme.`,
-      });
-      insights.push({
-        emoji: "💸",
-        texto: `${percentualNoite.toFixed(0)}% dos gastos acontecem à noite — o scroll virou consumo`,
-      });
-      break;
-  }
 
-  return insights;
+      return [
+        {
+          emoji: "📱",
+          texto: `${pequenasCompras.length} pequenas compras noturnas somam ${formatCurrency(sumValues(pequenasCompras))}.`,
+        },
+        {
+          emoji: "🌙",
+          texto: `${percentualNoite.toFixed(0)}% dos gastos acontecem à noite.`,
+        },
+        {
+          emoji: "💸",
+          texto: `Gastos digitais somam ${formatCurrency(gastosCategorias)} no período.`,
+        },
+      ];
+    }
+
+    case "nerd_colecionadora":
+      return [
+        {
+          emoji: "🎮",
+          texto: `Digital e autodesenvolvimento somam ${formatCurrency(gastosCategorias)} no período.`,
+        },
+        {
+          emoji: "🧩",
+          texto: `${safePercent(gastosCategorias, totalGeral).toFixed(0)}% do orçamento está ligado a interesses, hobbies e repertório.`,
+        },
+        {
+          emoji: "🛒",
+          texto: `${gastosContexto.length} compras foram motivadas por preparação, curiosidade ou ansiedade com o futuro.`,
+        },
+      ];
+
+    default:
+      return [
+        {
+          emoji: "✨",
+          texto: "Seus padrões estão se formando. Continue registrando para melhorar a leitura.",
+        },
+      ];
+  }
 }

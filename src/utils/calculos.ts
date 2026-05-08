@@ -38,7 +38,7 @@ export function categoriaDominante(transacoes: Array<Transacao & { categoria: st
       maior = {
         categoria,
         valor,
-        percentual: (valor / totalGeral) * 100
+        percentual: totalGeral > 0 ? (valor / totalGeral) * 100 : 0
       }
     }
   }
@@ -72,9 +72,9 @@ export function percentualPorContexto(transacoes: Array<Transacao & { contextoEm
   for (const contexto of Object.keys(contagem)) {
     resultado[contexto] = {
       ocorrencias: contagem[contexto],
-      percentualOcorrencias: (contagem[contexto] / totalTransacoes) * 100,
+      percentualOcorrencias: totalTransacoes > 0 ? (contagem[contexto] / totalTransacoes) * 100 : 0,
       valorTotal: valores[contexto],
-      percentualValor: (valores[contexto] / totalValor) * 100
+      percentualValor: totalValor > 0 ? (valores[contexto] / totalValor) * 100 : 0
     }
   }
   
@@ -100,17 +100,17 @@ export function gastosPorPeriodo(transacoes: Array<Transacao & { periodo: 'manha
   return {
     manha: {
       valor: periodos.manha,
-      percentual: (periodos.manha / total) * 100,
+      percentual: total > 0 ? (periodos.manha / total) * 100 : 0,
       quantidade: contagem.manha
     },
     tarde: {
       valor: periodos.tarde,
-      percentual: (periodos.tarde / total) * 100,
+      percentual: total > 0 ? (periodos.tarde / total) * 100 : 0,
       quantidade: contagem.tarde
     },
     noite: {
       valor: periodos.noite,
-      percentual: (periodos.noite / total) * 100,
+      percentual: total > 0 ? (periodos.noite / total) * 100 : 0,
       quantidade: contagem.noite
     }
   }
@@ -137,7 +137,7 @@ export function variacaoCategoria(transacoes: Array<Transacao & { categoria: str
   const totais = totalPorCategoria(transacoes)
   const totalGeral = Object.values(totais).reduce((a, b) => a + b, 0)
   
-  return ((totais[categoria] || 0) / totalGeral) * 100
+  return totalGeral > 0 ? ((totais[categoria] || 0) / totalGeral) * 100 : 0
 }
 
 /**
@@ -174,7 +174,7 @@ export function potencialEconomia(transacoes: Array<Transacao & { contextoEmocio
   
   return {
     gastosImpulso: totalImpulso,
-    percentualImpulso: (totalImpulso / totalGeral) * 100,
+    percentualImpulso: totalGeral > 0 ? (totalImpulso / totalGeral) * 100 : 0,
     economiaSugerida: economiasugerida,
     quantidadeTransacoes: gastosImpulso.length
   }

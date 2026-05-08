@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 type Archetype = {
   imagem?: string;
   nome: string;
@@ -10,92 +9,77 @@ type Archetype = {
   comportamento?: string;
   insightEspelho?: string;
   poderDeEscolha?: string;
-  corSecundaria?: string;
-  nomeDaReserva?: string;
-  categoriasDominantes?: string[];
-  contextoGatilho?: string;
-  recomendacoes?: string[];
-  scores?: Record<string, number>;
-  detalhes?: any;
 };
 
 export function ArchetypeCard({ arquetipo }: { arquetipo: Archetype }) {
   return (
-    <div className="rounded-3xl overflow-hidden bg-[#07110c] shadow-2xl border border-white/5 opacity-100 scale-100 transition-all duration-700">
-      {/* Topo Roxo com Imagem */}
-      <div className="p-10 text-center bg-[#c084fc]">
+    <div className="overflow-hidden rounded-3xl border border-white/5 bg-[#07110c] opacity-100 shadow-2xl transition-all duration-700">
+      <div className="bg-[#c084fc] p-10 text-center">
         <div className="mb-6">
           {arquetipo.imagem ? (
             <img
               src={arquetipo.imagem}
               alt={arquetipo.nome}
-              className="w-48 h-48 mx-auto object-contain drop-shadow-2xl"
+              className="mx-auto h-48 w-48 object-contain drop-shadow-2xl"
             />
           ) : (
-            <span className="text-8xl block">{arquetipo.emoji}</span>
+            <span className="block text-8xl">{arquetipo.emoji}</span>
           )}
         </div>
-        <h2 className="text-3xl md:text-4xl font-bold text-[#07110c] mb-1">
+        <h2 className="mb-1 text-3xl font-bold text-[#07110c] md:text-4xl">
           {arquetipo.nome}
         </h2>
-        <p className="text-[#07110c]/60 text-sm italic mb-4">
+        <p className="mb-4 text-sm italic text-[#07110c]/60">
           {arquetipo.nomeIngles}
         </p>
-        <div className="inline-flex items-center gap-2 bg-[#07110c]/20 rounded-full px-5 py-1.5 text-[#07110c] text-xs font-bold uppercase tracking-widest">
-          {arquetipo.percentualMatch?.toFixed(0) || 100}% de match
+        <div className="inline-flex items-center gap-2 rounded-full bg-[#07110c]/20 px-5 py-1.5 text-xs font-bold uppercase tracking-widest text-[#07110c]">
+          {arquetipo.percentualMatch?.toFixed(0) ?? 0}% de match
         </div>
       </div>
-      {/* Conteúdo */}
-      <div className="p-6 md:p-8 space-y-6">
-        {/* Gatilho */}
-        <div className="transition-all duration-500 delay-200 opacity-100 translate-y-0">
-          <h3 className="font-semibold text-foreground flex items-center gap-2 mb-2">
-            <span className="text-lg">⚡</span> Seu Gatilho
+
+      <div className="space-y-6 p-6 md:p-8">
+        <div>
+          <h3 className="mb-2 flex items-center gap-2 font-semibold text-white">
+            <span className="text-lg">⚡</span> Seu gatilho
           </h3>
           <p
-            className="text-foreground text-sm leading-relaxed italic pl-7"
+            className="pl-7 text-sm italic leading-relaxed"
             style={{ color: arquetipo.cor }}
           >
             {arquetipo.gatilho}
           </p>
         </div>
 
-        {/* Comportamento */}
-        <div className="transition-all duration-500 delay-300 opacity-100 translate-y-0">
-          <h3 className="font-semibold text-foreground flex items-center gap-2 mb-2">
-            <span className="text-lg">🎯</span> Seu Comportamento
+        <div>
+          <h3 className="mb-2 flex items-center gap-2 font-semibold text-white">
+            <span className="text-lg">🎯</span> Seu comportamento
           </h3>
           <p
-            className="text-foreground text-sm leading-relaxed italic pl-7"
+            className="pl-7 text-sm italic leading-relaxed"
             style={{ color: arquetipo.cor }}
           >
             {arquetipo.comportamento}
           </p>
         </div>
 
-        {/* Espelho (Insight) */}
-        <div
-          className="transition-all duration-500 delay-300 opacity-100 translate-y-0"
-          style={{ borderColor: arquetipo.cor }}
-        >
-          <h3 className="font-semibold text-foreground flex items-center gap-2 mb-2">
-            <span className="text-lg">🪞</span> O Espelho
+        <div>
+          <h3 className="mb-2 flex items-center gap-2 font-semibold text-white">
+            <span className="text-lg">🪞</span> O espelho
           </h3>
           <p
-            className="text-foreground text-sm leading-relaxed italic pl-7"
+            className="pl-7 text-sm italic leading-relaxed"
             style={{ color: arquetipo.cor }}
           >
             &ldquo;{arquetipo.insightEspelho}&rdquo;
           </p>
         </div>
 
-        {/* Poder de Escolha */}
-        <div className="transition-all duration-500 delay-300 opacity-100 translate-y-0">
-          <h3 className="font-semibold text-foreground flex items-center gap-2 mb-2">
-            <span className="text-lg">💪</span> Seu Poder de Escolha
+        <div>
+          <h3 className="mb-2 flex items-center gap-2 font-semibold text-white">
+            <span className="text-lg">💪</span> Seu poder de escolha
           </h3>
           <p
-            className="text-foreground text-sm leading-relaxed italic pl-7"
+            className="pl-7 text-sm italic leading-relaxed"
             style={{ color: arquetipo.cor }}
           >
             {arquetipo.poderDeEscolha}

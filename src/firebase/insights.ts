@@ -18,17 +18,23 @@ const formatPercent = (value: number) =>
 const formatAbsolutePercent = (value: number) => formatPercent(Math.abs(value));
 
 const fallbackCategory: CategorySpend = {
+  id: "sem_categoria",
   name: "Sem categoria",
   amount: 0,
   budget: 0,
   idealShare: 0,
   color: "#9fb0a3",
+  isEssential: false,
+};
+
+const getSpendingCategories = (categories: CategorySpend[]) => {
+  return [...categories]
+    .filter((category) => category.amount > 0)
+    .sort((first, second) => second.amount - first.amount);
 };
 
 const getTopCategory = (categories: CategorySpend[]) => {
-  return [...categories].sort(
-    (first, second) => second.amount - first.amount,
-  )[0] ?? fallbackCategory;
+  return getSpendingCategories(categories)[0] ?? fallbackCategory;
 };
 
 const getSharePercent = (amount: number, total: number) => {
@@ -44,12 +50,6 @@ const getBudgetVariationPercent = (amount: number, budget: number) => {
 };
 
 const concentrationTargetShare = 80;
-
-const getSpendingCategories = (categories: CategorySpend[]) => {
-  return [...categories]
-    .filter((category) => category.amount > 0)
-    .sort((first, second) => second.amount - first.amount);
-};
 
 const getConcentrationGroup = (
   categories: CategorySpend[],
@@ -112,12 +112,14 @@ const getConcentrationSubject = (categories: CategorySpend[]) => {
 const getWeekOverWeekChange = (
   weeklySpending: DashboardData["weeklySpending"],
 ) => {
-  if (weeklySpending.length < 2) {
+  const spendingWeeks = weeklySpending.filter((week) => week.amount > 0);
+
+  if (spendingWeeks.length < 2) {
     return 0;
   }
 
-  const previousWeek = weeklySpending[weeklySpending.length - 2].amount;
-  const currentWeek = weeklySpending[weeklySpending.length - 1].amount;
+  const previousWeek = spendingWeeks[spendingWeeks.length - 2].amount;
+  const currentWeek = spendingWeeks[spendingWeeks.length - 1].amount;
 
   if (!previousWeek) {
     return 0;
@@ -129,49 +131,92 @@ const getWeekOverWeekChange = (
 const getWeekendShare = (weekdaySpending: DashboardData["weekdaySpending"]) => {
   const total = weekdaySpending.reduce((sum, item) => sum + item.amount, 0);
   const weekendTotal = weekdaySpending
-    .filter((item) => item.label === "Sab" || item.label === "Dom")
+    .filter((item) => item.label === "Sáb" || item.label === "Dom")
     .reduce((sum, item) => sum + item.amount, 0);
 
-  if (!total) {
-    return 0;
-  }
-
-  return (weekendTotal / total) * 100;
+  return total > 0 ? (weekendTotal / total) * 100 : 0;
 };
 
-const getVariationLevel = (weeklySpending: DashboardData["weeklySpending"]) => {
-  if (!weeklySpending.length) {
+const getVariationRatio = (weeklySpending: DashboardData["weeklySpending"]) => {
+  const values = weeklySpending.map((item) => item.amount);
+  const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+
+  if (!average) {
     return 0;
   }
 
-  const average =
-    weeklySpending.reduce((sum, item) => sum + item.amount, 0) /
-    weeklySpending.length;
-
   const variance =
-    weeklySpending.reduce(
-      (sum, item) => sum + (item.amount - average) ** 2,
-      0,
-    ) / weeklySpending.length;
+    values.reduce((sum, value) => sum + (value - average) ** 2, 0) /
+    values.length;
 
-  return Math.sqrt(variance);
+  return Math.sqrt(variance) / average;
+};
+
+const parseDateInput = (date: string) => {
+  const parsedDate = new Date(`${date}T12:00:00`);
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+};
+
+const getDaysBetweenInclusive = (start: Date, end: Date) => {
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  return Math.max(
+    1,
+    Math.floor((end.getTime() - start.getTime()) / millisecondsPerDay) + 1,
+  );
+};
+
+const getPeriodMetrics = (data: DashboardData) => {
+  const start = parseDateInput(data.periodStart);
+  const end = parseDateInput(data.periodEnd);
+  const today = new Date();
+
+  if (!start || !end) {
+    const fallbackDaysElapsed = today.getDate();
+    const fallbackDaysInMonth = new Date(
+      today.getFullYear(),
+      today.getMonth() + 1,
+      0,
+    ).getDate();
+
+    return {
+      daysElapsed: fallbackDaysElapsed,
+      daysInPeriod: fallbackDaysInMonth,
+      daysLeft: Math.max(fallbackDaysInMonth - fallbackDaysElapsed, 0),
+    };
+  }
+
+  const daysInPeriod = getDaysBetweenInclusive(start, end);
+  const elapsedDate = today < start ? start : today > end ? end : today;
+  const daysElapsed = getDaysBetweenInclusive(start, elapsedDate);
+
+  return {
+    daysElapsed,
+    daysInPeriod,
+    daysLeft: Math.max(daysInPeriod - daysElapsed, 0),
+  };
 };
 
 const getProjectedMonthEnd = (data: DashboardData) => {
-  const daysElapsed = 24;
-  const daysInMonth = 30;
+  if (data.totalSpent <= 0) {
+    return 0;
+  }
+
+  const { daysElapsed, daysInPeriod } = getPeriodMetrics(data);
   const dailyAverage = data.totalSpent / daysElapsed;
 
-  return Math.round(dailyAverage * daysInMonth);
+  return Math.round(dailyAverage * daysInPeriod);
 };
 
 const getBudgetRunoutDays = (data: DashboardData) => {
-  const daysElapsed = 24;
-  const daysLeft = 30 - daysElapsed;
+  if (data.monthlyBudget <= 0 || data.totalSpent <= 0) {
+    return null;
+  }
+
+  const { daysElapsed, daysLeft } = getPeriodMetrics(data);
   const remainingBudget = data.monthlyBudget - data.totalSpent;
   const dailyAverage = data.totalSpent / daysElapsed;
 
-  if (remainingBudget <= 0 || dailyAverage <= 0) {
+  if (remainingBudget <= 0) {
     return 0;
   }
 
@@ -196,48 +241,84 @@ export const getDashboardInsights = (data: DashboardData): InsightItem[] => {
     concentrationGroup.categories,
   );
   const hasSpending = data.totalSpent > 0;
-  const variationLevel = getVariationLevel(data.weeklySpending);
+  const variationRatio = getVariationRatio(data.weeklySpending);
   const projectedMonthEnd = getProjectedMonthEnd(data);
   const projectedBalance = data.income - projectedMonthEnd;
   const budgetRunoutDays = getBudgetRunoutDays(data);
+  const budgetUsage = getSharePercent(data.totalSpent, data.monthlyBudget);
   const isHighlyConcentrated =
     concentrationGroup.categories.length > 0 &&
     concentrationGroup.categories.length <= 2 &&
     concentrationGroup.share >= concentrationTargetShare;
 
+  const budgetInsight: InsightItem =
+    data.monthlyBudget <= 0
+      ? {
+          title: "Orçamento do mês",
+          description:
+            "Cadastre seu orçamento mensal para o sistema medir margem, ritmo e risco de estouro com precisão.",
+          tone: "neutral",
+        }
+      : {
+          title: "Orçamento do mês",
+          description: hasSpending
+            ? `Você já usou ${formatPercent(budgetUsage)} do orçamento de ${data.monthLabel}.`
+            : "Ainda não há gastos no período atual para comparar com o orçamento.",
+          tone:
+            budgetUsage >= 100 ? "warning" : budgetUsage >= 80 ? "warning" : "positive",
+        };
+
+  const runoutInsight: InsightItem =
+    budgetRunoutDays === null
+      ? {
+          title: "Previsão de estouro",
+          description:
+            "Defina um orçamento mensal e registre alguns gastos para estimar quando sua margem acaba.",
+          tone: "neutral",
+        }
+      : {
+          title: "Previsão de estouro",
+          description:
+            budgetRunoutDays > 0
+              ? `Mantendo esse ritmo, sua margem cobre aproximadamente mais ${budgetRunoutDays} dias.`
+              : "Seu orçamento mensal já está no limite ou acima dele.",
+          tone: budgetRunoutDays > 6 ? "neutral" : "warning",
+        };
+
   return [
     {
       title: "Categoria dominante",
       description: hasSpending
-        ? `Você gastou ${formatCurrency(topCategory.amount)} com ${topCategory.name} (${formatPercent(topCategoryShare)} do total). Essa é sua categoria mais forte no momento.`
+        ? `Você gastou ${formatCurrency(topCategory.amount)} com ${topCategory.name} (${formatPercent(topCategoryShare)} do total).`
         : "Ainda não há gastos registrados para identificar uma categoria dominante.",
       tone: hasSpending && topCategoryShare > 30 ? "warning" : "neutral",
     },
     {
-      title: "Comparação com limite",
+      title: "Limite da categoria",
       description:
-        topCategory.budget <= 0
-          ? `${topCategory.name} ainda não tem limite cadastrado para comparação.`
+        !hasSpending || topCategory.budget <= 0
+          ? `${topCategory.name} ainda não tem limite suficiente para comparação.`
           : topCategoryVsBudget > 0
-            ? `Seu gasto com ${topCategory.name} ficou ${formatPercent(topCategoryVsBudget)} acima do limite da categoria, o que reduz sua margem para economizar neste mês.`
+            ? `${topCategory.name} ficou ${formatPercent(topCategoryVsBudget)} acima do limite cadastrado.`
             : topCategoryVsBudget < 0
-              ? `Seu gasto com ${topCategory.name} ficou ${formatAbsolutePercent(topCategoryVsBudget)} abaixo do limite da categoria, mantendo margem para economizar neste mês.`
-              : `Seu gasto com ${topCategory.name} está exatamente no limite definido para a categoria.`,
+              ? `${topCategory.name} está ${formatAbsolutePercent(topCategoryVsBudget)} abaixo do limite cadastrado.`
+              : `${topCategory.name} está exatamente no limite definido.`,
       tone:
-        topCategory.budget <= 0
+        !hasSpending || topCategory.budget <= 0
           ? "neutral"
           : topCategoryVsBudget > 0
             ? "warning"
             : "positive",
     },
+    budgetInsight,
     {
       title: "Distribuição ideal",
       description: !hasSpending
-        ? "Ainda não há gastos suficientes para comparar sua distribuição com o plano."
+        ? "Registre gastos para comparar sua distribuição real com o plano."
         : topCategoryVsIdeal > 0
-          ? `${topCategory.name} está ${formatPercent(topCategoryVsIdeal)} acima da distribuição planejada. Seu orçamento geral ainda funciona, mas a distribuição está desequilibrada.`
+          ? `${topCategory.name} está ${formatPercent(topCategoryVsIdeal)} acima da distribuição planejada.`
           : topCategoryVsIdeal < 0
-            ? `${topCategory.name} está ${formatAbsolutePercent(topCategoryVsIdeal)} abaixo da distribuição planejada. Essa categoria não está pressionando o orçamento no momento.`
+            ? `${topCategory.name} está ${formatAbsolutePercent(topCategoryVsIdeal)} abaixo da distribuição planejada.`
             : `${topCategory.name} está alinhada com a distribuição planejada.`,
       tone: !hasSpending ? "neutral" : topCategoryVsIdeal > 0 ? "warning" : "positive",
     },
@@ -245,10 +326,10 @@ export const getDashboardInsights = (data: DashboardData): InsightItem[] => {
       title: "Ritmo semanal",
       description:
         weekOverWeekChange > 0
-          ? `Seus gastos aumentaram ${formatPercent(weekOverWeekChange)} em relação à semana passada, indicando aceleração recente no consumo.`
+          ? `Seus gastos aumentaram ${formatPercent(weekOverWeekChange)} em relação à semana anterior com movimento.`
           : weekOverWeekChange < 0
-            ? `Seus gastos caíram ${formatAbsolutePercent(weekOverWeekChange)} em relação à semana passada, indicando desaceleração no consumo.`
-            : "Seus gastos ficaram estáveis em relação à semana passada.",
+            ? `Seus gastos caíram ${formatAbsolutePercent(weekOverWeekChange)} em relação à semana anterior com movimento.`
+            : "Ainda não há variação semanal relevante.",
       tone:
         weekOverWeekChange > 0
           ? "warning"
@@ -257,50 +338,47 @@ export const getDashboardInsights = (data: DashboardData): InsightItem[] => {
             : "neutral",
     },
     {
-      title: "Comportamento de consumo",
+      title: "Concentração",
       description: hasSpending
         ? `${concentrationSubject.subject} ${concentrationSubject.verb} ${formatPercent(concentrationGroup.share)} dos gastos. ${
             isHighlyConcentrated
-              ? "Como poucas categorias explicam quase todo o consumo, uma variação nelas pode desequilibrar o mês."
-              : "A distribuição está menos dependente de uma ou duas categorias."
+              ? "Poucas categorias explicam quase todo o mês."
+              : "A distribuição está menos dependente de uma única frente."
           }`
-        : "Ainda não há gastos por categoria para avaliar concentração de consumo.",
+        : "Ainda não há gastos por categoria para avaliar concentração.",
       tone: isHighlyConcentrated ? "warning" : "neutral",
     },
     {
-      title: "Pico de consumo",
+      title: "Fim de semana",
       description:
         weekendShare >= 35
-          ? `Você concentra ${formatPercent(weekendShare)} dos gastos no fim de semana. Seu padrão de consumo sugere maior impulsividade entre sexta e domingo.`
+          ? `Você concentra ${formatPercent(weekendShare)} dos gastos no fim de semana.`
           : weekendShare > 0
-            ? `O fim de semana representa ${formatPercent(weekendShare)} dos seus gastos, sem sinal forte de concentração nesse período.`
+            ? `O fim de semana representa ${formatPercent(weekendShare)} dos seus gastos.`
             : "Não há gastos registrados no fim de semana.",
       tone: weekendShare >= 35 ? "warning" : "neutral",
     },
     {
       title: "Consistência",
       description:
-        variationLevel > 120
-          ? "Seus gastos estão com alta variação entre as semanas, o que torna o comportamento menos previsível."
-          : "Seu ritmo de gastos está relativamente estável, o que facilita planejamento.",
-      tone: variationLevel > 120 ? "warning" : "positive",
+        variationRatio > 0.6
+          ? "Seus gastos variam bastante entre as semanas, o que dificulta previsão."
+          : "Seu ritmo semanal está relativamente estável.",
+      tone: variationRatio > 0.6 ? "warning" : "positive",
     },
     {
       title: "Projeção do mês",
       description:
-        projectedBalance >= 0
-          ? `Mantendo esse ritmo, você termina o mês com ${formatCurrency(projectedBalance)} disponíveis.`
-          : `Mantendo esse ritmo, você termina o mês com déficit de ${formatCurrency(Math.abs(projectedBalance))}.`,
-      tone: projectedBalance >= 0 ? "positive" : "warning",
+        !hasSpending
+          ? "A projeção aparece depois dos primeiros lançamentos."
+          : data.income > 0
+            ? projectedBalance >= 0
+              ? `Mantendo esse ritmo, você termina o período com ${formatCurrency(projectedBalance)} disponíveis.`
+              : `Mantendo esse ritmo, você termina o período com déficit de ${formatCurrency(Math.abs(projectedBalance))}.`
+            : `Mantendo esse ritmo, o gasto projetado fica em ${formatCurrency(projectedMonthEnd)}.`,
+      tone: !hasSpending ? "neutral" : projectedBalance >= 0 ? "positive" : "warning",
     },
-    {
-      title: "Previsão de estouro",
-      description:
-        budgetRunoutDays > 0
-          ? `Se nada mudar, seu orçamento atual será consumido em aproximadamente ${budgetRunoutDays} dias.`
-          : "Seu orçamento mensal já está no limite ou acima dele.",
-      tone: budgetRunoutDays > 6 ? "neutral" : "warning",
-    },
+    runoutInsight,
   ];
 };
 
@@ -308,32 +386,54 @@ export const getDashboardRecommendations = (
   data: DashboardData,
 ): RecommendationItem[] => {
   const topCategory = getTopCategory(data.categories);
-  const tenPercentSaving = topCategory.amount * 0.1;
   const weekendShare = getWeekendShare(data.weekdaySpending);
   const weekendImpact = data.totalSpent * (weekendShare / 100) * 0.18;
   const goalGap = data.savingsGoal - (data.income - data.totalSpent);
 
-  return [
+  if (data.totalSpent <= 0) {
+    return [
+      {
+        title: "Registre seus primeiros gastos",
+        description:
+          "Com três ou mais lançamentos, o SAVE já consegue apontar padrões por categoria, contexto e dia da semana.",
+      },
+      {
+        title: "Defina seus limites",
+        description:
+          "Preencha renda, orçamento e metas no perfil para transformar os insights em alertas práticos.",
+      },
+    ];
+  }
+
+  const recommendations: RecommendationItem[] = [
     {
-      title: `Reduza 10% em ${topCategory.name}`,
-      description: `Um corte simples nessa categoria geraria cerca de ${formatCurrency(tenPercentSaving)} de economia mensal.`,
-    },
-    {
-      title: "Controle melhor os fins de semana",
-      description: `Limitar gastos de lazer e conveniência no fim de semana pode reduzir cerca de ${formatCurrency(weekendImpact)} do total atual.`,
-    },
-    {
-      title: "Aproxime sua distribuição do ideal",
-      description: `Mover parte do gasto de ${topCategory.name} para categorias essenciais melhora seu equilíbrio sem exigir mudanças radicais.`,
-    },
-    {
-      title: "Proteja sua meta de economia",
-      description:
-        goalGap > 0
-          ? `No ritmo atual, faltam ${formatCurrency(goalGap)} para atingir sua meta de economia.`
-          : "Seu nível atual de gastos permite sustentar sua meta de economia.",
+      title: `Teste uma redução de 10% em ${topCategory.name}`,
+      description: `Isso liberaria cerca de ${formatCurrency(topCategory.amount * 0.1)} no mês sem mudar todo o orçamento.`,
     },
   ];
+
+  if (weekendImpact > 0) {
+    recommendations.push({
+      title: "Planeje o fim de semana antes de sexta",
+      description: `Um teto simples para lazer e conveniência pode reduzir perto de ${formatCurrency(weekendImpact)} do gasto atual.`,
+    });
+  }
+
+  recommendations.push({
+    title: "Ajuste limites por categoria",
+    description:
+      "Os gastos vêm das transações; use o perfil apenas para calibrar renda, orçamento e metas.",
+  });
+
+  recommendations.push({
+    title: "Proteja sua meta de economia",
+    description:
+      data.savingsGoal > 0 && goalGap > 0
+        ? `No ritmo atual, faltam ${formatCurrency(goalGap)} para atingir sua meta.`
+        : "Seu nível atual de gastos é compatível com a meta cadastrada.",
+  });
+
+  return recommendations;
 };
 
 export const getDashboardSummary = (data: DashboardData) => {
@@ -343,7 +443,7 @@ export const getDashboardSummary = (data: DashboardData) => {
   return {
     remainingBudget: data.monthlyBudget - data.totalSpent,
     savingsNow: data.income - data.totalSpent,
-    topCategoryName: topCategory.name,
+    topCategoryName: topCategory.amount > 0 ? topCategory.name : "Sem gastos",
     topCategoryAmount: topCategory.amount,
     projectedMonthEnd,
   };

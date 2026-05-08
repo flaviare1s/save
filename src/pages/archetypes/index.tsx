@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { detectarArquetipo, gerarInsights } from "./../../utils/arquetipos";
 import { calcularReserva, potencialEconomia } from "./../../utils/calculos";
 import dados from "./../../data/transactions.json";
@@ -17,6 +18,22 @@ import theNerdColleccor from "../../assets/images/theNerdColleccor.png";
 export default function ArquetipoPage() {
   const { usuario, transacoes } = dados;
 
+  // Garantir tipagem correta das transações
+  const transacoesTyped = transacoes as Array<{
+    valor: number;
+    categoria: string;
+    contextoEmocional: string;
+    periodo: "manha" | "tarde" | "noite";
+    diaSemana:
+      | "segunda"
+      | "terca"
+      | "quarta"
+      | "quinta"
+      | "sexta"
+      | "sabado"
+      | "domingo";
+  }>;
+
   const imagensArquetipos: Record<string, string> = {
     "Alquimista da Estética": theAestheticAlchemist,
     "Curadora de Conforto": theComfortCurator,
@@ -27,19 +44,19 @@ export default function ArquetipoPage() {
   };
 
   // Lógica de detecção e dados
-  const detectedArquetipo = detectarArquetipo(transacoes);
+  const detectedArquetipo = detectarArquetipo(transacoesTyped);
 
   // CORREÇÃO: Adicionamos a propriedade 'imagem' ao objeto arquetipo para o card usar
   const arquetipo = {
     ...detectedArquetipo,
     imagem: imagensArquetipos[detectedArquetipo.nome] || "",
-    cor: detectedArquetipo.cor ?? "#7B2D8B",
-    corSecundaria: detectedArquetipo.corSecundaria ?? "#F7F3FF",
+    cor: "#7B2D8B",
+    corSecundaria: "#F7F3FF",
   };
 
-  const insights = gerarInsights(arquetipo, transacoes);
+  const insights = gerarInsights(arquetipo, transacoesTyped);
   const reserva = calcularReserva(usuario.rendaMensal);
-  const economia = potencialEconomia(transacoes);
+  const economia = potencialEconomia(transacoesTyped);
   const reservaAtual = economia.economiaSugerida * 0.3;
 
   return (

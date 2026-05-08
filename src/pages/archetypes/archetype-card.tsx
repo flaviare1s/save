@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type Archetype = {
   imagem?: string;
   nome: string;
@@ -9,6 +10,13 @@ type Archetype = {
   comportamento?: string;
   insightEspelho?: string;
   poderDeEscolha?: string;
+  corSecundaria?: string;
+  nomeDaReserva?: string;
+  categoriasDominantes?: string[];
+  contextoGatilho?: string;
+  recomendacoes?: string[];
+  scores?: Record<string, number>;
+  detalhes?: any;
 };
 
 export function ArchetypeCard({ arquetipo }: { arquetipo: Archetype }) {

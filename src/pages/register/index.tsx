@@ -1,57 +1,57 @@
-import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-import { AuthShell } from '../../components/auth-shell'
+import { AuthShell } from "../../components/auth-shell";
 import {
   getAuthErrorMessage,
   loginWithGoogle,
   registerWithEmail,
-} from '../../firebase/auth'
-import { getUserStatus } from '../../firebase/user-status'
-import { getNextRouteForUserStatus } from '../../routes/flow'
-import { ROUTE_PATHS } from '../../routes/paths'
+} from "../../firebase/auth";
+import { getUserStatus } from "../../firebase/user-status";
+import { getNextRouteForUserStatus } from "../../routes/flow";
+import { ROUTE_PATHS } from "../../routes/paths";
 
 export const Register = () => {
-  const navigate = useNavigate()
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const goToNextRoute = async (userId: string) => {
-    const status = await getUserStatus(userId)
-    navigate(getNextRouteForUserStatus(status), { replace: true })
-  }
+    const status = await getUserStatus(userId);
+    navigate(getNextRouteForUserStatus(status), { replace: true });
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setError('')
-    setLoading(true)
+    event.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
-      const result = await registerWithEmail(name, email, password)
-      await goToNextRoute(result.user.uid)
+      const result = await registerWithEmail(name, email, password);
+      await goToNextRoute(result.user.uid);
     } catch (currentError) {
-      setError(getAuthErrorMessage(currentError))
+      setError(getAuthErrorMessage(currentError));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleGoogleRegister = async () => {
-    setError('')
-    setLoading(true)
+    setError("");
+    setLoading(true);
 
     try {
-      const result = await loginWithGoogle()
-      await goToNextRoute(result.user.uid)
+      const result = await loginWithGoogle();
+      await goToNextRoute(result.user.uid);
     } catch (currentError) {
-      setError(getAuthErrorMessage(currentError))
+      setError(getAuthErrorMessage(currentError));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <AuthShell
@@ -114,4 +114,4 @@ export const Register = () => {
       </form>
     </AuthShell>
   );
-}
+};

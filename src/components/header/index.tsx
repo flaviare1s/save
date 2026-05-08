@@ -1,42 +1,49 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { ChartLine, DiamondPlus, Drama, LayoutDashboard, LogIn, LogOut } from 'lucide-react'
-import { signOut } from 'firebase/auth'
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import {
+  ChartLine,
+  DiamondPlus,
+  Drama,
+  LayoutDashboard,
+  LogIn,
+  LogOut,
+} from "lucide-react";
+import { signOut } from "firebase/auth";
 
-import logo from '../../assets/images/logo.png'
-import { useAuth } from '../../contexts/auth-context'
-import { auth } from '../../firebase/config'
-import { ROUTE_PATHS } from '../../routes/paths'
+import logo from "../../assets/images/logo.png";
+import { useAuth } from "../../contexts/auth-context";
+import { auth } from "../../firebase/config";
+import { ROUTE_PATHS } from "../../routes/paths";
 
 const linkBaseClassName =
-  'inline-flex h-11 items-center gap-2 rounded-full px-3 text-[color:var(--text-strong)] transition-colors duration-200'
+  "inline-flex h-11 items-center gap-2 rounded-full px-3 text-[color:var(--text-strong)] transition-colors duration-200";
 
 const brandTitleStyle = {
-  backgroundImage: 'linear-gradient(90deg, var(--primary), var(--tertiary))',
-  backgroundClip: 'text',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-}
+  backgroundImage: "linear-gradient(90deg, var(--primary), var(--tertiary))",
+  backgroundClip: "text",
+  WebkitBackgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+};
 
 const getNavLinkClassName = ({ isActive }: { isActive: boolean }) =>
   [
     linkBaseClassName,
-    'bg-transparent hover:bg-white/6',
-    isActive ? 'bg-white/8 text-white' : '',
-  ].join(' ')
+    "bg-transparent hover:bg-white/6",
+    isActive ? "bg-white/8 text-white" : "",
+  ].join(" ");
 
 export const Header = () => {
-  const { user } = useAuth()
-  const navigate = useNavigate()
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     if (!user) {
-      return
+      return;
     }
 
     void signOut(auth).finally(() => {
-      navigate(ROUTE_PATHS.login, { replace: true })
-    })
-  }
+      navigate(ROUTE_PATHS.login, { replace: true });
+    });
+  };
 
   return (
     <header className="sticky top-0 z-30 bg-[rgba(7,17,12,0.78)] backdrop-blur-xl">
@@ -110,4 +117,4 @@ export const Header = () => {
       </div>
     </header>
   );
-}
+};

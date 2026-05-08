@@ -220,7 +220,7 @@ export const Dashboard = () => {
         </p>
       </div>
 
-      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <section className="mt-6 sm:mt-8 grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
         <StatCard
           label="Total gasto"
           value={formatCurrency(data.totalSpent)}
@@ -246,7 +246,7 @@ export const Dashboard = () => {
         />
       </section>
 
-      <section className="mt-8 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+      <section className="mt-6 sm:mt-8 grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="flex flex-col gap-4">
           <Panel
             title="Gastos essenciais"

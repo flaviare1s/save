@@ -10,7 +10,7 @@ type BarChartProps = {
 
 export const BarChart = ({ labels, values, color }: BarChartProps) => {
   return (
-    <div className="h-72">
+    <div className="h-64 sm:h-72">
       <Bar
         data={{
           labels,

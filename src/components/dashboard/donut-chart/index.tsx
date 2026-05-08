@@ -10,7 +10,7 @@ type DonutChartProps = {
 
 export const DonutChart = ({ labels, values, colors }: DonutChartProps) => {
   return (
-    <div className="h-72">
+    <div className="h-64 sm:h-72">
       <Doughnut
         data={{
           labels,

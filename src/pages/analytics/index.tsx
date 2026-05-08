@@ -226,31 +226,31 @@ export function Analytics() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pb-24">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-text-strong md:text-3xl">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text-strong">
           Sua jornada de consumo
         </h1>
-        <p className="mt-1 text-text">
+        <p className="mt-1 text-sm sm:text-base text-text">
           Entenda os padrões emocionais por trás das suas compras.
         </p>
       </div>
 
       {Object.keys(contextData).length > 0 ? (
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <GraficoContexto dados={contextData} />
         </div>
       ) : (
-        <div className="mb-8 rounded-2xl border border-tertiary bg-bg p-6 text-sm text-text">
+        <div className="mb-6 sm:mb-8 rounded-2xl border border-tertiary bg-bg p-4 sm:p-6 text-xs sm:text-sm text-text">
           Registre contexto emocional em gastos não essenciais para liberar este
           gráfico.
         </div>
       )}
 
-      <div className="mb-8">
-        <h2 className="mb-4 text-xl font-semibold text-text-strong">
+      <div className="mb-6 sm:mb-8">
+        <h2 className="mb-3 sm:mb-4 text-lg sm:text-xl font-semibold text-text-strong">
           Insights sobre seu consumo
         </h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
           {insights.map((insight) => (
             <InsightCard
               key={insight.titulo}

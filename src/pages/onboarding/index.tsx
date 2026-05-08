@@ -25,6 +25,7 @@ export const Onboarding = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [viewingTransaction, setViewingTransaction] = useState<any | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const ITEMS_PER_PAGE = 10;
 
   const categories = [
@@ -370,98 +371,126 @@ export const Onboarding = () => {
 
       {/* Seção de Gastos Anteriores */}
       <section className="mt-12 pt-10 border-t border-white/10">
-        <h2 className="text-xl font-semibold text-(--text-strong) mb-6">Gastos Anteriores</h2>
-        
-        {mockData.transacoes.length === 0 ? (
-          <p className="text-sm text-(--text) bg-white/5 p-6 rounded-2xl ring-1 ring-white/5 text-center">
-            Nenhuma transação registrada ainda.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-4">
-            <div className="overflow-x-auto rounded-2xl ring-1 ring-white/10 bg-white/5">
-              <table className="w-full text-left text-sm text-(--text)">
-                <thead className="border-b border-white/10 bg-white/5 text-xs uppercase text-(--text-strong)">
-                  <tr>
-                    <th scope="col" className="px-4 py-3">Data</th>
-                    <th scope="col" className="px-4 py-3">Descrição</th>
-                    <th scope="col" className="px-4 py-3">Categoria</th>
-                    <th scope="col" className="px-4 py-3">Contexto</th>
-                    <th scope="col" className="px-4 py-3">Valor</th>
-                    <th scope="col" className="px-4 py-3 text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...mockData.transacoes]
-                    .reverse()
-                    .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-                    .map(t => {
-                      const categoryInfo = getCategoryDisplay(t.categoria);
-                      const emotionalInfo = getContextDisplay(t.contextoEmocional);
-
-                      return (
-                        <tr key={t.id} className="border-b border-white/5 transition hover:bg-white/5 last:border-0">
-                          <td className="px-4 py-3 whitespace-nowrap">{t.data.split('-').reverse().join('/')}</td>
-                          <td className="px-4 py-3 font-medium text-white">{t.descricao}</td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <span className="flex items-center gap-1">{categoryInfo?.icon} {categoryInfo?.label}</span>
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <span className="flex items-center gap-1">{emotionalInfo?.icon} {emotionalInfo?.title}</span>
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-red-400 font-medium">
-                            R$ -{t.valor.toFixed(2).replace('.', ',')}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <button 
-                                onClick={() => setViewingTransaction(t)}
-                                className="p-1.5 rounded-lg bg-white/5 text-(--text) hover:text-white hover:bg-white/10 transition cursor-pointer"
-                                title="Visualizar"
-                              >
-                                <Eye size={16} />
-                              </button>
-                              <button 
-                                onClick={() => handleEdit(t)}
-                                className="p-1.5 rounded-lg bg-(--primary)/10 text-(--primary) hover:bg-(--primary)/20 transition cursor-pointer"
-                                title="Editar"
-                              >
-                                <Pencil size={16} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Paginação */}
-            {Math.ceil(mockData.transacoes.length / ITEMS_PER_PAGE) > 1 && (
-              <div className="flex items-center justify-between px-2">
-                <span className="text-xs text-(--text)">
-                  Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} a {Math.min(currentPage * ITEMS_PER_PAGE, mockData.transacoes.length)} de {mockData.transacoes.length} transações
-                </span>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1.5 rounded-lg text-sm bg-white/5 text-white disabled:opacity-30 transition hover:bg-white/10 cursor-pointer disabled:cursor-not-allowed"
-                  >
-                    Anterior
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(p => Math.min(Math.ceil(mockData.transacoes.length / ITEMS_PER_PAGE), p + 1))}
-                    disabled={currentPage === Math.ceil(mockData.transacoes.length / ITEMS_PER_PAGE)}
-                    className="px-3 py-1.5 rounded-lg text-sm bg-white/5 text-white disabled:opacity-30 transition hover:bg-white/10 cursor-pointer disabled:cursor-not-allowed"
-                  >
-                    Próxima
-                  </button>
-                </div>
-              </div>
-            )}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h2 className="text-xl font-semibold text-(--text-strong)">Gastos Anteriores</h2>
+          
+          <div className="relative w-full sm:w-72">
+            <input
+              type="text"
+              placeholder="Buscar por descrição ou categoria..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full rounded-xl bg-white/5 px-4 py-2 text-sm text-(--text-strong) outline-none ring-1 ring-white/10 focus:ring-(--primary)"
+            />
           </div>
-        )}
+        </div>
+        
+        {(() => {
+          const filteredTransactions = mockData.transacoes.filter(t => 
+            t.descricao.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            t.categoria.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          
+          if (filteredTransactions.length === 0) {
+            return (
+              <p className="text-sm text-(--text) bg-white/5 p-6 rounded-2xl ring-1 ring-white/5 text-center">
+                Nenhuma transação encontrada.
+              </p>
+            );
+          }
+
+          const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
+
+          return (
+            <div className="flex flex-col gap-4">
+              <div className="overflow-x-auto rounded-2xl ring-1 ring-white/10 bg-white/5">
+                <table className="w-full text-left text-sm text-(--text)">
+                  <thead className="border-b border-white/10 bg-white/5 text-xs uppercase text-(--text-strong)">
+                    <tr>
+                      <th scope="col" className="px-4 py-3">Data</th>
+                      <th scope="col" className="px-4 py-3">Descrição</th>
+                      <th scope="col" className="px-4 py-3">Categoria</th>
+                      <th scope="col" className="px-4 py-3">Contexto</th>
+                      <th scope="col" className="px-4 py-3">Valor</th>
+                      <th scope="col" className="px-4 py-3 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...filteredTransactions]
+                      .reverse()
+                      .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                      .map(t => {
+                        const categoryInfo = getCategoryDisplay(t.categoria);
+                        const emotionalInfo = getContextDisplay(t.contextoEmocional);
+
+                        return (
+                          <tr key={t.id} className="border-b border-white/5 transition hover:bg-white/5 last:border-0">
+                            <td className="px-4 py-3 whitespace-nowrap">{t.data.split('-').reverse().join('/')}</td>
+                            <td className="px-4 py-3 font-medium text-white">{t.descricao}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <span className="flex items-center gap-1">{categoryInfo?.icon} {categoryInfo?.label}</span>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <span className="flex items-center gap-1">{emotionalInfo?.icon} {emotionalInfo?.title}</span>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-red-400 font-medium">
+                              R$ -{t.valor.toFixed(2).replace('.', ',')}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button 
+                                  onClick={() => setViewingTransaction(t)}
+                                  className="p-1.5 rounded-lg bg-white/5 text-(--text) hover:text-white hover:bg-white/10 transition cursor-pointer"
+                                  title="Visualizar"
+                                >
+                                  <Eye size={16} />
+                                </button>
+                                <button 
+                                  onClick={() => handleEdit(t)}
+                                  className="p-1.5 rounded-lg bg-(--primary)/10 text-(--primary) hover:bg-(--primary)/20 transition cursor-pointer"
+                                  title="Editar"
+                                >
+                                  <Pencil size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Paginação */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-2">
+                  <span className="text-xs text-(--text)">
+                    Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} a {Math.min(currentPage * ITEMS_PER_PAGE, filteredTransactions.length)} de {filteredTransactions.length} transações
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1.5 rounded-lg text-sm bg-white/5 text-white disabled:opacity-30 transition hover:bg-white/10 cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      Anterior
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1.5 rounded-lg text-sm bg-white/5 text-white disabled:opacity-30 transition hover:bg-white/10 cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      Próxima
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </section>
     </main>
   );

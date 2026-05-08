@@ -239,11 +239,11 @@ export const Dashboard = () => {
         </div>
 
         <Panel
-          title="Ultimas Transacoes"
+          title="Últimas transações"
           subtitle="Veja suas últimas transações realizadas."
         >
           <div className="flex flex-col gap-3 mt-4">
-            {[...mockData.transacoes].reverse().slice(0, 7).map((t) => (
+            {[...mockData.transacoes].reverse().slice(0, 8).map((t) => (
               <div key={t.id} className="flex items-center justify-between rounded-xl bg-white/5 p-4 ring-1 ring-white/10">
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-(--text-strong)">{t.descricao}</span>

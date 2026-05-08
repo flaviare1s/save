@@ -20,21 +20,21 @@ export function Progress({ nomeReserva, meta, atual = 0, cor }: ProgressProps) {
     <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-foreground">{nomeReserva}</h3>
-        <span className="text-sm font-medium" style={{ color: cor }}>
+        <span className="text-sm font-medium" style={{ color: cor}}>
           {percentual.toFixed(0)}%
         </span>
       </div>
       
       {/* Barra de progresso */}
       <div className="h-4 bg-muted rounded-full overflow-hidden mb-4">
-        <div 
-          className="h-full rounded-full transition-all duration-1000 ease-out"
-          style={{ 
-            width: `${progresso}%`,
-            backgroundColor: cor 
-          }}
-        />
-      </div>
+  <div 
+    className="h-full rounded-full transition-all duration-1000 ease-out"
+    style={{ 
+      width: `${progresso}%`,
+      backgroundColor: cor // ADICIONE ESTA LINHA
+    }}
+  />
+</div>
       
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">

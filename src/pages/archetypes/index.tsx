@@ -1,4 +1,3 @@
-
 import { detectarArquetipo, gerarInsights } from './../../utils/arquetipos'
 import { calcularReserva, potencialEconomia } from './../../utils/calculos'
 import dados from './../../data/transactions.json'
@@ -7,59 +6,99 @@ import { InsightCard } from './insight-card'
 import { Progress } from './progress'
 import { Recomendations } from './recomendations'
 
+// Imports de imagens
+import theAestheticAlchemist from '@assets/images/theAestheticAlchemist.png'
+import theComfortCurator from '@assets/images/theComfortCurator.png'
+import theConnectionArchitect from '@assets/images/theConnectionArchitect.png'
+import theDigitalRefugee from '@assets/images/theDigitalRefugee.png'
+import thePragmaticVisionary from '@assets/images/thePragmatieVisionary.png'
+import theNerdColleccor from '@assets/images/theNerdColleccor.png'
+
 export default function ArquetipoPage() {
   const { usuario, transacoes } = dados
   
-  // Detecta o arquétipo baseado nas transações
+  const imagensArquetipos: Record<string, string> = {
+    'Alquimista da Estética': theAestheticAlchemist,
+    'Curadora de Conforto': theComfortCurator,
+    'Arquiteta de Conexões': theConnectionArchitect,
+    'Refugiada Digital': theDigitalRefugee,
+    'Visionária Pragmática': thePragmaticVisionary,
+    'Nerd Collector': theNerdColleccor, 
+  }
+
+  // Lógica de detecção e dados
   const detectedArquetipo = detectarArquetipo(transacoes)
+  
+  // CORREÇÃO: Adicionamos a propriedade 'imagem' ao objeto arquetipo para o card usar
   const arquetipo = {
     ...detectedArquetipo,
+    imagem: imagensArquetipos[detectedArquetipo.nome] || '',
     cor: detectedArquetipo.cor ?? '#7B2D8B',
     corSecundaria: detectedArquetipo.corSecundaria ?? '#F7F3FF',
   }
   
-  // Gera insights personalizados
   const insights = gerarInsights(arquetipo, transacoes)
-  
-  // Calcula a reserva sugerida
   const reserva = calcularReserva(usuario.rendaMensal)
   const economia = potencialEconomia(transacoes)
-  
-  // Simula um valor atual de reserva (em produção viria do banco)
   const reservaAtual = economia.economiaSugerida * 0.3
-  
+
   return (
-    <div className="min-h-screen bg-background">
-         
+    <div className="min-h-screen bg-[#07110c] text-white"> 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Título da página */}
+        
         <div className="mb-8 text-center">
-          <p className="text-sm text-[#7B2D8B] font-medium mb-2">Seu resultado</p>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+          <p className="text-sm text-[#32d6ff] font-medium mb-2 uppercase tracking-widest">Seu resultado</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-[#f5ffe7]">
             Meu Arquétipo SAVE
           </h1>
-          <p className="text-muted-foreground mt-2 max-w-lg mx-auto">
-            Baseado na análise dos seus padrões de consumo, identificamos seu perfil único.
-          </p>
         </div>
         
-        {/* Card do Arquétipo - O coração do sistema */}
-        <div className="mb-8 animate-fade-in-scale">
+        <div className="mb-12">
           <ArchetypeCard arquetipo={arquetipo} />
         </div>
         
-        {/* Insights personalizados */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-foreground mb-4 text-center">
+        {/* Seção de Seleção dos Arquétipos */}
+        <div className="bg-white/5 rounded-3xl p-8 mb-12 border border-white/10">
+          <h3 className="font-semibold text-[#f5ffe7] mb-8 text-center text-lg">
+            Os Arquétipos SAVE
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {Object.entries(imagensArquetipos).map(([nome, img], index) => {
+              const isSelected = arquetipo.nome === nome;
+              return (
+                <div 
+                  key={index} 
+                  className={`text-center p-4 rounded-2xl border transition-all duration-300 ${
+                    isSelected 
+                      ? 'border-[#c084fc] bg-[#c084fc]/10 scale-105 opacity-100' 
+                      : 'border-transparent opacity-30 hover:opacity-100'
+                  }`}
+                >
+                  <img src={img} alt={nome} className="w-12 h-12 mx-auto mb-2 object-contain" />
+                  <p className="text-[9px] font-bold text-[#9fb0a3] mt-2 uppercase leading-tight">
+                    {nome}
+                  </p>
+                  {isSelected && (
+                    <span className="text-[8px] bg-[#c084fc] text-[#07110c] px-2 py-0.5 rounded-full mt-2 inline-block font-bold">
+                      VOCÊ
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* --- O QUE ESTAVA FALTANDO ABAIXO --- */}
+
+        {/* Insights Personalizados */}
+        <div className="mb-12">
+          <h2 className="text-xl font-semibold text-[#f5ffe7] mb-6 text-center">
             Seus Insights Personalizados
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {insights.map((insight: any, index: number) => (
-              <div 
-                key={index} 
-                className="animate-slide-up"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
+              <div key={index} className="animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
                 <InsightCard 
                   emoji={insight.emoji}
                   texto={insight.texto}
@@ -70,8 +109,8 @@ export default function ArquetipoPage() {
           </div>
         </div>
         
-        {/* Barra de progresso da reserva */}
-        <div className="mb-8 animate-slide-up delay-300">
+        {/* Barra de progresso */}
+        <div className="mb-12">
           <Progress
             nomeReserva={arquetipo.nomeDaReserva ?? 'Reserva'}
             meta={reserva.valor}
@@ -80,85 +119,34 @@ export default function ArquetipoPage() {
           />
         </div>
         
-        {/* Recomendações de economia */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-foreground mb-4 text-center">
+        {/* Recomendações */}
+        <div className="mb-12">
+          <h2 className="text-xl font-semibold text-[#f5ffe7] mb-6 text-center">
             Recomendações para Você
           </h2>
           <div className="grid grid-cols-1 gap-4">
             {arquetipo.recomendacoes?.map((recomendacao: any, index: number) => (
-              <div 
+              <Recomendations
                 key={index}
-                className="animate-slide-up"
-                style={{ animationDelay: `${(index + 4) * 100}ms` }}
-              >
-                <Recomendations
-                  numero={index + 1}
-                  texto={recomendacao}
-                  cor={arquetipo.cor}
-                />
-              </div>
+                numero={index + 1}
+                texto={recomendacao}
+                cor={arquetipo.cor}
+              />
             ))}
           </div>
         </div>
-        
-        {/* Seção de todos os arquétipos */}
-        <div className="bg-card rounded-2xl border border-border p-6 mb-8">
-          <h3 className="font-semibold text-foreground mb-4 text-center">
-            Os 5 Arquétipos SAVE
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {[
-              { emoji: '🕯️', nome: 'Curadora de Conforto', cor: '#c084fc' },
-              { emoji: '🥂', nome: 'Arquiteta de Conexões', cor: '#b6ff00' },
-              { emoji: '📚', nome: 'Visionária Pragmática', cor: '#32d6ff' },
-              { emoji: '✨', nome: 'Alquimista da Estética', cor: '#c084fc' },
-              { emoji: '📱', nome: 'Refugiada Digital', cor: '#b6ff00' },
-            ].map((arq, index) => (
-              <div 
-                key={index}
-                className={`text-center p-4 rounded-xl transition-all ${
-                  arquetipo.emoji === arq.emoji 
-                    ? 'ring-2 scale-105' 
-                    : 'opacity-60 hover:opacity-100'
-                }`}
-                style={{ 
-                  backgroundColor: arq.cor + '15',
-                  borderColor: arquetipo.emoji === arq.emoji ? arq.cor : 'transparent'
-                }}
-              >
-                <span className="text-3xl">{arq.emoji}</span>
-                <p className="text-xs font-medium text-foreground mt-2 leading-tight">
-                  {arq.nome}
-                </p>
-                {arquetipo.emoji === arq.emoji && (
-                  <span className="inline-block mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full text-white"
-                    style={{ backgroundColor: arq.cor }}>
-                    Você
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-        
+
         {/* Mensagem inspiracional final */}
-        <div 
-          className="text-center p-8 rounded-2xl animate-pulse-glow"
-          style={{ backgroundColor: arquetipo.corSecundaria }}
-        >
-          <p className="text-lg font-medium mb-2" style={{ color: arquetipo.cor }}>
+        <div className="text-center p-10 rounded-3xl bg-white/5 border border-white/10">
+          <p className="text-lg font-medium mb-3" style={{ color: arquetipo.cor }}>
             {arquetipo.emoji} Lembre-se
           </p>
-          <p className="text-foreground text-sm leading-relaxed max-w-lg mx-auto">
-            Seu arquétipo não é um rótulo, é um espelho. Use essa consciência para fazer 
-            escolhas mais alinhadas com quem você realmente quer ser. 
-            <span className="font-medium" style={{ color: arquetipo.cor }}> Você tem o poder de escolha.</span>
+          <p className="text-[#9fb0a3] text-sm leading-relaxed max-w-lg mx-auto italic">
+            "Seu arquétipo não é um rótulo, é um espelho. Use essa consciência para fazer escolhas mais alinhadas com quem você realmente quer ser."
           </p>
         </div>
+
       </main>
-      
-      
     </div>
   )
 }

@@ -13,61 +13,36 @@ interface Archetype {
   poderDeEscolha: string;
 }
 
-export function ArchetypeCard({ arquetipo }: { arquetipo: Archetype }) {
+export function ArchetypeCard({ arquetipo }: { arquetipo: any }) {
   const [isVisible, setIsVisible] = useState(false)
-  
+
   useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), 100)
-    return () => clearTimeout(timer)
+    setIsVisible(true)
   }, [])
-  
+
   return (
-    <div 
-      className={`rounded-3xl overflow-hidden shadow-xl transition-all duration-700 ${
-        isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
-      }`}
-      style={{ backgroundColor: arquetipo.corSecundaria }}
-    >
-      {/* Header com gradiente */}
-      <div 
-        className="p-8 text-center"
-        style={{ 
-          background: `linear-gradient(135deg, ${arquetipo.cor} 0%, ${arquetipo.cor}CC 100%)` 
-        }}
-      >
-        <div 
-          className={`text-7xl mb-4 transition-all duration-500 delay-300 ${
-            isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
-          }`}
-        >
-          {arquetipo.emoji}
+    <div className={`rounded-3xl overflow-hidden bg-[#07110c] shadow-2xl border border-white/5 transition-all duration-700 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+      
+      {/* Topo Roxo com Imagem */}
+      <div className="p-10 text-center bg-[#c084fc]">
+        <div className="mb-6">
+          {arquetipo.imagem ? (
+            <img src={arquetipo.imagem} alt={arquetipo.nome} className="w-48 h-48 mx-auto object-contain drop-shadow-2xl" />
+          ) : (
+            <span className="text-8xl block">{arquetipo.emoji}</span>
+          )}
         </div>
-        <h2 
-          className={`text-2xl md:text-3xl font-bold text-white mb-2 transition-all duration-500 delay-400 ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-          }`}
-        >
+        <h2 className="text-3xl md:text-4xl font-bold text-[#07110c] mb-1">
           {arquetipo.nome}
         </h2>
-        <p 
-          className={`text-white/80 text-sm italic transition-all duration-500 delay-500 ${
-            isVisible ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
+        <p className="text-[#07110c]/60 text-sm italic mb-4">
           {arquetipo.nomeIngles}
         </p>
-        <div 
-          className={`mt-4 inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 transition-all duration-500 delay-600 ${
-            isVisible ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          <span className="text-white text-sm font-medium">
-            {arquetipo.percentualMatch?.toFixed(0) || 75}% de match
-          </span>
+        <div className="inline-flex items-center gap-2 bg-[#07110c]/20 rounded-full px-5 py-1.5 text-[#07110c] text-xs font-bold uppercase tracking-widest">
+          {arquetipo.percentualMatch?.toFixed(0) || 100}% de match
         </div>
       </div>
-      
-      {/* Conteúdo */}
+     {/* Conteúdo */}
       <div className="p-6 md:p-8 space-y-6">
         {/* Gatilho */}
         <div 
@@ -78,7 +53,7 @@ export function ArchetypeCard({ arquetipo }: { arquetipo: Archetype }) {
           <h3 className="font-semibold text-foreground flex items-center gap-2 mb-2">
             <span className="text-lg">⚡</span> Seu Gatilho
           </h3>
-          <p className="text-muted-foreground text-sm leading-relaxed pl-7">
+          <p className="text-foreground text-sm leading-relaxed italic pl-7" style={{ color: arquetipo.cor }}>
             {arquetipo.gatilho}
           </p>
         </div>
@@ -92,14 +67,14 @@ export function ArchetypeCard({ arquetipo }: { arquetipo: Archetype }) {
           <h3 className="font-semibold text-foreground flex items-center gap-2 mb-2">
             <span className="text-lg">🎯</span> Seu Comportamento
           </h3>
-          <p className="text-muted-foreground text-sm leading-relaxed pl-7">
+          <p className="text-foreground text-sm leading-relaxed italic pl-7" style={{ color: arquetipo.cor }}>
             {arquetipo.comportamento}
           </p>
         </div>
         
         {/* Espelho (Insight) */}
         <div 
-          className={`bg-white rounded-2xl p-5 border-l-4 transition-all duration-500 delay-400 ${
+          className={`transition-all duration-500 delay-300 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
           style={{ borderColor: arquetipo.cor }}
@@ -114,18 +89,20 @@ export function ArchetypeCard({ arquetipo }: { arquetipo: Archetype }) {
         
         {/* Poder de Escolha */}
         <div 
-          className={`bg-white rounded-2xl p-5 transition-all duration-500 delay-500 ${
+          className={`transition-all duration-500 delay-300 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
         >
           <h3 className="font-semibold text-foreground flex items-center gap-2 mb-2">
             <span className="text-lg">💪</span> Seu Poder de Escolha
           </h3>
-          <p className="text-muted-foreground text-sm leading-relaxed pl-7">
+          <p className="text-foreground text-sm leading-relaxed italic pl-7" style={{ color: arquetipo.cor }}>
             {arquetipo.poderDeEscolha}
           </p>
         </div>
       </div>
+
+
     </div>
   )
 }

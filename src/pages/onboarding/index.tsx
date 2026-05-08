@@ -124,7 +124,8 @@ export const Onboarding = () => {
         subcategoria: "outros", // fallback
         contextoEmocional: tipoGasto === "nao_essencial" ? contextoEmocional : "",
         diaSemana: new Date(data).toLocaleDateString('pt-BR', { weekday: 'long' }).split('-')[0],
-        periodo: tipoGasto === "nao_essencial" ? periodo : ""
+        periodo: tipoGasto === "nao_essencial" ? periodo : "",
+        isEssencial: tipoGasto === "essencial"
       };
 
       if (editingId) {

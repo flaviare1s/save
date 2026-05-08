@@ -48,7 +48,13 @@ export const Dashboard = () => {
     autodesenvolvimento: "Autodesenvolvimento",
     beleza: "Beleza",
     digital: "Digital",
-    conforto: "Conforto"
+    conforto: "Conforto",
+    contas: "Contas Básicas",
+    moradia: "Moradia",
+    mercado: "Mercado/Feira",
+    saude: "Saúde & Farmácia",
+    filhos: "Filhos",
+    transporte: "Transporte"
   };
   const topCategoryNameMock = categoryNamesMap[topCategoryKey] || topCategoryKey;
 
@@ -56,24 +62,32 @@ export const Dashboard = () => {
     .filter(t => t.subcategoria === "impulso")
     .reduce((acc, curr) => acc + curr.valor, 0);
 
-  const categorySums = mockData.transacoes.reduce((acc, curr) => {
-    const catName = categoryNamesMap[curr.categoria] || curr.categoria;
-    acc[catName] = (acc[catName] || 0) + curr.valor;
-    return acc;
-  }, {
-    "Alimentação": 0,
-    "Moda": 0,
-    "Social": 0,
-    "Autodesenvolvimento": 0,
-    "Beleza": 0,
-    "Digital": 0,
-    "Conforto": 0
-  } as Record<string, number>);
+  const essentialSums = mockData.transacoes
+    .filter(t => t.isEssencial)
+    .reduce((acc, curr) => {
+      const catName = categoryNamesMap[curr.categoria] || curr.categoria;
+      acc[catName] = (acc[catName] || 0) + curr.valor;
+      return acc;
+    }, {} as Record<string, number>);
 
-  const donutLabels = Object.keys(categorySums);
-  const donutValues = Object.values(categorySums);
+  const nonEssentialSums = mockData.transacoes
+    .filter(t => !t.isEssencial)
+    .reduce((acc, curr) => {
+      const catName = categoryNamesMap[curr.categoria] || curr.categoria;
+      acc[catName] = (acc[catName] || 0) + curr.valor;
+      return acc;
+    }, {} as Record<string, number>);
+
   const defaultColors = ["#32d6ff", "#ff32d6", "#d6ff32", "#32ff32", "#ff8832", "#8832ff", "#ff3232"];
-  const donutColors = donutLabels.map((_, i) => defaultColors[i % defaultColors.length]);
+
+  const essentialLabels = Object.keys(essentialSums);
+  const essentialValues = Object.values(essentialSums);
+  const essentialColors = essentialLabels.map((_, i) => defaultColors[i % defaultColors.length]);
+
+  const nonEssentialLabels = Object.keys(nonEssentialSums);
+  const nonEssentialValues = Object.values(nonEssentialSums);
+  const nonEssentialColors = nonEssentialLabels.map((_, i) => defaultColors[(i + 3) % defaultColors.length]); // Offset colors
+
 
   const { user, loading: authLoading } = useAuth();
   const [dashboardState, setDashboardState] =
@@ -192,23 +206,44 @@ export const Dashboard = () => {
       </section>
 
       <section className="mt-8 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Panel
-          title="Distribuição por categoria"
-          subtitle="Veja onde seu dinheiro está mais concentrado."
-        >
-          <DonutChart
-            labels={donutLabels}
-            values={donutValues}
-            colors={donutColors}
-          />
-        </Panel>
+        <div className="flex flex-col gap-4">
+          <Panel
+            title="Gastos Essenciais"
+            subtitle="Distribuição em categorias básicas e necessárias."
+          >
+            {essentialLabels.length > 0 ? (
+              <DonutChart
+                labels={essentialLabels}
+                values={essentialValues}
+                colors={essentialColors}
+              />
+            ) : (
+              <p className="text-sm text-(--text) text-center mt-4">Nenhum gasto essencial registrado.</p>
+            )}
+          </Panel>
+
+          <Panel
+            title="Gastos Não Essenciais"
+            subtitle="Distribuição nas demais categorias de estilo de vida."
+          >
+            {nonEssentialLabels.length > 0 ? (
+              <DonutChart
+                labels={nonEssentialLabels}
+                values={nonEssentialValues}
+                colors={nonEssentialColors}
+              />
+            ) : (
+              <p className="text-sm text-(--text) text-center mt-4">Nenhum gasto não essencial registrado.</p>
+            )}
+          </Panel>
+        </div>
 
         <Panel
-          title="Ultimas Transacoes"
+          title="Últimas transações"
           subtitle="Veja suas últimas transações realizadas."
         >
           <div className="flex flex-col gap-3 mt-4">
-            {[...mockData.transacoes].reverse().slice(0, 7).map((t) => (
+            {[...mockData.transacoes].reverse().slice(0, 8).map((t) => (
               <div key={t.id} className="flex items-center justify-between rounded-xl bg-white/5 p-4 ring-1 ring-white/10">
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-(--text-strong)">{t.descricao}</span>

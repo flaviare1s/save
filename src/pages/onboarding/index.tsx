@@ -37,7 +37,8 @@ export const Onboarding = () => {
     { id: "mercado", icon: "🛒", label: "Mercado/Feira" },
     { id: "saude", icon: "💊", label: "Saúde & Farmácia" },
     { id: "filhos", icon: "👶", label: "Filhos" },
-    { id: "transporte", icon: "🚌", label: "Transporte" }
+    { id: "transporte", icon: "🚌", label: "Transporte" },
+    { id: "investimento", icon: "💰", label: "Investimentos/Reserva" }
   ];
 
   const categories = [

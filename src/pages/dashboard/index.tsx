@@ -384,14 +384,6 @@ export const Dashboard = () => {
         </div>
       </section>
 
-      <section className="mt-8">
-        <Link
-          to={ROUTE_PATHS.onboarding}
-          className="inline-flex rounded-2xl bg-white/5 px-5 py-3 text-sm font-medium text-(--text-strong) ring-1 ring-white/10 transition hover:bg-white/10"
-        >
-          Registrar novo gasto
-        </Link>
-      </section>
     </main>
   );
 };

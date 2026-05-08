@@ -2,18 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useAuth } from "../../contexts/auth-context";
-import { getDashboardData } from "../../firebase/dashboard";
-import type {
-  DashboardData,
-  ExpenseTransaction,
-} from "../../firebase/dashboard-types";
+import type { ExpenseTransaction } from "../../firebase/dashboard-types";
 import { subscribeUserTransactions } from "../../firebase/transactions";
-import { detectarArquetipo, gerarInsights, arquetipos } from "../../utils/arquetipos";
-import { calcularReserva, potencialEconomia } from "../../utils/calculos";
+import {
+  detectarArquetipo,
+  gerarInsights,
+  arquetipos,
+} from "../../utils/arquetipos";
 import { ROUTE_PATHS } from "../../routes/paths";
 import { ArchetypeCard } from "./archetype-card";
 import { InsightCard } from "./insight-card";
-import { Progress } from "./progress";
 import { Recomendations } from "./recomendations";
 
 import theAestheticAlchemist from "../../assets/images/theAestheticAlchemist.png";
@@ -48,8 +46,6 @@ export default function ArquetipoPage() {
   const { user, loading: authLoading } = useAuth();
   const [transactions, setTransactions] = useState<ExpenseTransaction[]>([]);
   const [transactionsUserId, setTransactionsUserId] = useState("");
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [dashboardUserId, setDashboardUserId] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -70,23 +66,13 @@ export default function ArquetipoPage() {
       },
     );
 
-    void getDashboardData(user.uid)
-      .then((nextDashboardData) => {
-        setDashboardData(nextDashboardData);
-        setDashboardUserId(user.uid);
-      })
-      .catch(() => {
-        setDashboardData(null);
-        setDashboardUserId(user.uid);
-      });
-
     return unsubscribe;
   }, [user]);
 
   const loadingTransactions = Boolean(user && transactionsUserId !== user.uid);
-  const loadingDashboard = Boolean(user && dashboardUserId !== user.uid);
-  const currentTransactions = loadingTransactions ? emptyTransactions : transactions;
-  const currentDashboardData = loadingDashboard ? null : dashboardData;
+  const currentTransactions = loadingTransactions
+    ? emptyTransactions
+    : transactions;
   const archetypeTransactions = useMemo(
     () => toArchetypeTransactions(currentTransactions),
     [currentTransactions],
@@ -106,15 +92,8 @@ export default function ArquetipoPage() {
     () => gerarInsights(arquetipo, archetypeTransactions),
     [archetypeTransactions, arquetipo],
   );
-  const income = currentDashboardData?.income ?? 0;
-  const reserva = calcularReserva(income);
-  const economia = potencialEconomia(archetypeTransactions);
-  const reservaAtual =
-    income > 0
-      ? Math.max(income - (currentDashboardData?.totalSpent ?? 0), 0)
-      : economia.economiaSugerida;
 
-  if (authLoading || loadingTransactions || loadingDashboard) {
+  if (authLoading || loadingTransactions) {
     return (
       <main className="mx-auto flex min-h-[calc(100svh-72px)] w-full max-w-6xl items-center justify-center px-4 py-10 sm:px-6">
         <p className="text-sm text-(--text)">Carregando perfil SAVE...</p>
@@ -230,15 +209,6 @@ export default function ArquetipoPage() {
         </div>
 
         <div className="mb-12">
-          <Progress
-            nomeReserva={arquetipo.nomeDaReserva}
-            meta={reserva.valor}
-            atual={reservaAtual}
-            cor={arquetipo.cor}
-          />
-        </div>
-
-        <div className="mb-12">
           <h2 className="mb-6 text-center text-xl font-semibold text-[#f5ffe7]">
             Recomendações para você
           </h2>
@@ -270,3 +240,4 @@ export default function ArquetipoPage() {
     </div>
   );
 }
+

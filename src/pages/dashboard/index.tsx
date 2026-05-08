@@ -165,7 +165,7 @@ export const Dashboard = () => {
       <div className="max-w-3xl">
         <p className="text-sm text-(--secondary)">Dashboard</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-(--text-strong)">
-          Analise simples do seu consumo
+          Olá, {mockData.usuario.nome}!
         </h1>
         <p className="mt-3 text-sm text-(--text)">
           Seus gastos por categoria, padrões principais e algumas ações práticas
@@ -223,7 +223,7 @@ export const Dashboard = () => {
         </Panel>
       </section>
 
-      <section className="mt-8 grid gap-4 lg:grid-cols-2">
+      {/* <section className="mt-8 grid gap-4 lg:grid-cols-2">
         <Panel
           title="Insights"
           subtitle="Observação, impacto e leitura do seu comportamento."
@@ -255,7 +255,26 @@ export const Dashboard = () => {
             ))}
           </div>
         </Panel>
+      </section> */}
+      <section className="mt-8">
+        <div className="rounded-3xl bg-white/5 p-6 ring-1 ring-white/8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-xl font-semibold tracking-tight text-(--text-strong)">
+              Descubra seu perfil SAVE
+            </h2>
+            <p className="text-(--text) max-w-xl text-sm leading-relaxed">
+              Entenda os padrões emocionais por trás do seu consumo e transforme sua relação com o dinheiro.
+            </p>
+          </div>
+          <Link
+            to={ROUTE_PATHS.archetypes}
+            className="whitespace-nowrap rounded-2xl bg-(--primary) px-6 py-3 text-sm font-medium text-slate-950 transition hover:opacity-90"
+          >
+            Meu Arquétipo
+          </Link>
+        </div>
       </section>
+
     </main>
   );
 };

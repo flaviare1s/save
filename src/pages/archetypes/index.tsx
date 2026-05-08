@@ -11,7 +11,12 @@ export default function ArquetipoPage() {
   const { usuario, transacoes } = dados
   
   // Detecta o arquétipo baseado nas transações
-  const arquetipo = detectarArquetipo(transacoes)
+  const detectedArquetipo = detectarArquetipo(transacoes)
+  const arquetipo = {
+    ...detectedArquetipo,
+    cor: detectedArquetipo.cor ?? '#7B2D8B',
+    corSecundaria: detectedArquetipo.corSecundaria ?? '#F7F3FF',
+  }
   
   // Gera insights personalizados
   const insights = gerarInsights(arquetipo, transacoes)
@@ -68,7 +73,7 @@ export default function ArquetipoPage() {
         {/* Barra de progresso da reserva */}
         <div className="mb-8 animate-slide-up delay-300">
           <Progress
-            nomeReserva={arquetipo.nomeDaReserva}
+            nomeReserva={arquetipo.nomeDaReserva ?? 'Reserva'}
             meta={reserva.valor}
             atual={reservaAtual}
             cor={arquetipo.cor}
@@ -104,11 +109,11 @@ export default function ArquetipoPage() {
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {[
-              { emoji: '🕯️', nome: 'Curadora de Conforto', cor: '#9B59B6' },
-              { emoji: '🥂', nome: 'Arquiteta de Conexões', cor: '#E91E8C' },
-              { emoji: '📚', nome: 'Visionária Pragmática', cor: '#2196F3' },
-              { emoji: '✨', nome: 'Alquimista da Estética', cor: '#F5A623' },
-              { emoji: '📱', nome: 'Refugiada Digital', cor: '#00BCD4' },
+              { emoji: '🕯️', nome: 'Curadora de Conforto', cor: '#c084fc' },
+              { emoji: '🥂', nome: 'Arquiteta de Conexões', cor: '#b6ff00' },
+              { emoji: '📚', nome: 'Visionária Pragmática', cor: '#32d6ff' },
+              { emoji: '✨', nome: 'Alquimista da Estética', cor: '#c084fc' },
+              { emoji: '📱', nome: 'Refugiada Digital', cor: '#b6ff00' },
             ].map((arq, index) => (
               <div 
                 key={index}

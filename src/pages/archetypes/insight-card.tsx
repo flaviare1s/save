@@ -1,4 +1,4 @@
-export function InsightCard({ emoji, texto, destaque = false }) {
+export function InsightCard({ emoji, texto, destaque = false }: { emoji: string; texto: string; destaque?: boolean }) {
   return (
     <div 
       className={`rounded-2xl p-5 transition-all hover:scale-[1.01] ${

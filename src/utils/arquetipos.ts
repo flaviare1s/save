@@ -130,26 +130,26 @@ export const arquetipos = [
  * @param {Array} transacoes - Lista de transações da usuária
  * @returns {Object} - Arquétipo detectado com todas as informações
  */
-export function detectarArquetipo(transacoes) {
+export function detectarArquetipo(transacoes: { valor: number; categoria: string; contextoEmocional: string; periodo: string; diaSemana?: string }[]) {
   const totalGeral = transacoes.reduce((a, b) => a + b.valor, 0)
   const totalTransacoes = transacoes.length
   
   // Calcula totais por categoria
-  const totaisPorCategoria = {}
+  const totaisPorCategoria: Record<string, number> = {}
   transacoes.forEach(t => {
     totaisPorCategoria[t.categoria] = (totaisPorCategoria[t.categoria] || 0) + t.valor
   })
   
   // Calcula contagem por contexto emocional
-  const contagemPorContexto = {}
-  const valoresPorContexto = {}
+  const contagemPorContexto: Record<string, number> = {}
+  const valoresPorContexto: Record<string, number> = {}
   transacoes.forEach(t => {
     contagemPorContexto[t.contextoEmocional] = (contagemPorContexto[t.contextoEmocional] || 0) + 1
     valoresPorContexto[t.contextoEmocional] = (valoresPorContexto[t.contextoEmocional] || 0) + t.valor
   })
   
   // Calcula contagem por período
-  const contagemPorPeriodo = {}
+  const contagemPorPeriodo: Record<string, number> = {}
   transacoes.forEach(t => {
     contagemPorPeriodo[t.periodo] = (contagemPorPeriodo[t.periodo] || 0) + 1
   })
@@ -246,7 +246,7 @@ export function detectarArquetipo(transacoes) {
  * @param {Array} transacoes - Lista de transações
  * @returns {Array} - Lista de insights personalizados
  */
-export function gerarInsights(arquetipo, transacoes) {
+export function gerarInsights(arquetipo: { id: string; contextoGatilho: string; categoriasDominantes: string[] }, transacoes: { valor: number; periodo: string; contextoEmocional: string; categoria: string; diaSemana?: string }[]) {
   const insights = []
   const totalGeral = transacoes.reduce((a, b) => a + b.valor, 0)
   

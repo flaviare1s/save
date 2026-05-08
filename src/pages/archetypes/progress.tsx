@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 
-export function Progress({ nomeReserva, meta, atual = 0, cor }) {
+interface ProgressProps {
+  nomeReserva: string
+  meta: number
+  atual?: number
+  cor?: string
+}
+
+export function Progress({ nomeReserva, meta, atual = 0, cor }: ProgressProps) {
   const [progresso, setProgresso] = useState(0)
   const percentual = Math.min((atual / meta) * 100, 100)
   

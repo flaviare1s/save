@@ -1,6 +1,19 @@
 import { useState, useEffect } from 'react'
 
-export function ArchetypeCard({ arquetipo }) {
+interface Archetype {
+  corSecundaria: string;
+  cor: string;
+  emoji: string;
+  nome: string;
+  nomeIngles: string;
+  percentualMatch?: number;
+  gatilho: string;
+  comportamento: string;
+  insightEspelho: string;
+  poderDeEscolha: string;
+}
+
+export function ArchetypeCard({ arquetipo }: { arquetipo: Archetype }) {
   const [isVisible, setIsVisible] = useState(false)
   
   useEffect(() => {

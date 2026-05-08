@@ -1,10 +1,21 @@
 /**
+ * Representa uma transação básica
+ */
+type Transacao = {
+  valor: number
+  categoria?: string
+  contextoEmocional?: string
+  periodo?: 'manha' | 'tarde' | 'noite'
+  diaSemana?: 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado' | 'domingo'
+}
+
+/**
  * Calcula o total gasto por categoria
  * @param {Array} transacoes - Lista de transações
  * @returns {Object} - Objeto com totais por categoria
  */
-export function totalPorCategoria(transacoes) {
-  return transacoes.reduce((acc, transacao) => {
+export function totalPorCategoria(transacoes: Array<Transacao & { categoria: string }>) {
+  return transacoes.reduce<Record<string, number>>((acc, transacao) => {
     const categoria = transacao.categoria
     acc[categoria] = (acc[categoria] || 0) + transacao.valor
     return acc
@@ -16,7 +27,7 @@ export function totalPorCategoria(transacoes) {
  * @param {Array} transacoes - Lista de transações
  * @returns {Object} - Categoria dominante com nome e percentual
  */
-export function categoriaDominante(transacoes) {
+export function categoriaDominante(transacoes: Array<Transacao & { categoria: string }>) {
   const totais = totalPorCategoria(transacoes)
   const totalGeral = Object.values(totais).reduce((a, b) => a + b, 0)
   
@@ -40,9 +51,9 @@ export function categoriaDominante(transacoes) {
  * @param {Array} transacoes - Lista de transações
  * @returns {Object} - Objeto com percentuais por contexto
  */
-export function percentualPorContexto(transacoes) {
-  const contagem = {}
-  const valores = {}
+export function percentualPorContexto(transacoes: Array<Transacao & { contextoEmocional: string }>) {
+  const contagem: Record<string, number> = {}
+  const valores: Record<string, number> = {}
   const totalTransacoes = transacoes.length
   const totalValor = transacoes.reduce((a, b) => a + b.valor, 0)
   
@@ -52,7 +63,12 @@ export function percentualPorContexto(transacoes) {
     valores[contexto] = (valores[contexto] || 0) + transacao.valor
   })
   
-  const resultado = {}
+  const resultado: Record<string, {
+    ocorrencias: number
+    percentualOcorrencias: number
+    valorTotal: number
+    percentualValor: number
+  }> = {}
   for (const contexto of Object.keys(contagem)) {
     resultado[contexto] = {
       ocorrencias: contagem[contexto],
@@ -70,7 +86,7 @@ export function percentualPorContexto(transacoes) {
  * @param {Array} transacoes - Lista de transações
  * @returns {Object} - Objeto com totais por período
  */
-export function gastosPorPeriodo(transacoes) {
+export function gastosPorPeriodo(transacoes: Array<Transacao & { periodo: 'manha' | 'tarde' | 'noite' }>) {
   const periodos = { manha: 0, tarde: 0, noite: 0 }
   const contagem = { manha: 0, tarde: 0, noite: 0 }
   
@@ -105,7 +121,7 @@ export function gastosPorPeriodo(transacoes) {
  * @param {Array} transacoes - Lista de transações
  * @returns {number} - Média semanal
  */
-export function mediaSemanal(transacoes) {
+export function mediaSemanal(transacoes: Transacao[]) {
   const totalGasto = transacoes.reduce((a, b) => a + b.valor, 0)
   // Assumindo 4 semanas no mês
   return totalGasto / 4
@@ -117,7 +133,7 @@ export function mediaSemanal(transacoes) {
  * @param {string} categoria - Nome da categoria
  * @returns {number} - Percentual da categoria
  */
-export function variacaoCategoria(transacoes, categoria) {
+export function variacaoCategoria(transacoes: Array<Transacao & { categoria: string }>, categoria: string) {
   const totais = totalPorCategoria(transacoes)
   const totalGeral = Object.values(totais).reduce((a, b) => a + b, 0)
   
@@ -129,7 +145,7 @@ export function variacaoCategoria(transacoes, categoria) {
  * @param {number} rendaMensal - Renda mensal da usuária
  * @returns {Object} - Objeto com valor da reserva e detalhes
  */
-export function calcularReserva(rendaMensal) {
+export function calcularReserva(rendaMensal: number) {
   const valorReserva = rendaMensal * 0.2
   return {
     valor: valorReserva,
@@ -143,7 +159,7 @@ export function calcularReserva(rendaMensal) {
  * @param {Array} transacoes - Lista de transações
  * @returns {Object} - Potencial de economia identificado
  */
-export function potencialEconomia(transacoes) {
+export function potencialEconomia(transacoes: Array<Transacao & { contextoEmocional: string }>) {
   // Identifica gastos por impulso (tedio_noturno e busca_validacao)
   const gastosImpulso = transacoes.filter(t => 
     t.contextoEmocional === 'tedio_noturno' || 
@@ -169,7 +185,7 @@ export function potencialEconomia(transacoes) {
  * @param {Array} transacoes - Lista de transações
  * @returns {number} - Total gasto
  */
-export function totalGasto(transacoes) {
+export function totalGasto(transacoes: { valor: number }[]) {
   return transacoes.reduce((a, b) => a + b.valor, 0)
 }
 
@@ -179,7 +195,7 @@ export function totalGasto(transacoes) {
  * @param {number} quantidade - Quantidade de gastos a retornar
  * @returns {Array} - Lista dos maiores gastos
  */
-export function maioresGastos(transacoes, quantidade = 5) {
+export function maioresGastos(transacoes: { valor: number }[], quantidade = 5) {
   return [...transacoes]
     .sort((a, b) => b.valor - a.valor)
     .slice(0, quantidade)
@@ -190,7 +206,7 @@ export function maioresGastos(transacoes, quantidade = 5) {
  * @param {Array} transacoes - Lista de transações
  * @returns {Object} - Gastos agrupados por dia
  */
-export function gastosPorDiaSemana(transacoes) {
+export function gastosPorDiaSemana(transacoes: Array<Transacao & { diaSemana: 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado' | 'domingo' }>) {
   const dias = {
     segunda: { valor: 0, quantidade: 0 },
     terca: { valor: 0, quantidade: 0 },
@@ -202,9 +218,10 @@ export function gastosPorDiaSemana(transacoes) {
   }
   
   transacoes.forEach(t => {
-    if (dias[t.diaSemana]) {
-      dias[t.diaSemana].valor += t.valor
-      dias[t.diaSemana].quantidade++
+    const diaSemana = t.diaSemana as keyof typeof dias
+    if (diaSemana in dias) {
+      dias[diaSemana].valor += t.valor
+      dias[diaSemana].quantidade++
     }
   })
   
@@ -216,7 +233,7 @@ export function gastosPorDiaSemana(transacoes) {
  * @param {number} valor - Valor a ser formatado
  * @returns {string} - Valor formatado
  */
-export function formatarMoeda(valor) {
+export function formatarMoeda(valor: number) {
   return valor.toLocaleString('pt-BR', {
     style: 'currency',
     currency: 'BRL'
@@ -228,6 +245,6 @@ export function formatarMoeda(valor) {
  * @param {number} valor - Valor do percentual
  * @returns {string} - Percentual formatado
  */
-export function formatarPercentual(valor) {
+export function formatarPercentual(valor: number) {
   return `${valor.toFixed(1)}%`
 }

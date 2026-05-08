@@ -4,6 +4,7 @@ import { mockData } from "../../data/mockData";
 import { ROUTE_PATHS } from "../../routes/paths";
 import { useAuth } from "../../contexts/auth-context";
 import { saveOnboardingData } from "../../firebase/onboarding";
+import { Pencil, Eye, X } from "lucide-react";
 
 export const Onboarding = () => {
   const navigate = useNavigate();
@@ -19,50 +20,10 @@ export const Onboarding = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSave = async () => {
-    if (!descricao || !valor || !data || !categoria || !contextoEmocional || !periodo) {
-      setError("Por favor, preencha todos os campos obrigatórios.");
-      return;
-    }
-
-    if (!user) {
-      navigate(ROUTE_PATHS.login, { replace: true });
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const newTransaction = {
-        id: Date.now(),
-        data,
-        descricao,
-        valor: parseFloat(valor.replace(",", ".")),
-        categoria,
-        subcategoria: "outros", // fallback
-        contextoEmocional,
-        diaSemana: new Date(data).toLocaleDateString('pt-BR', { weekday: 'long' }).split('-')[0],
-        periodo
-      };
-
-      // CRUD com mock
-      mockData.transacoes.push(newTransaction);
-
-      // Lógica de backend original (autenticação e onboarding)
-      await saveOnboardingData(user, { 
-        category: categoria, 
-        priority: contextoEmocional, 
-        view: periodo 
-      });
-      await refreshUserStatus();
-
-      navigate(ROUTE_PATHS.dashboard, { replace: true });
-    } catch {
-      setError("Não foi possível salvar os dados.");
-      setLoading(false);
-    }
-  };
+  // CRUD States
+  const [editingId, setEditingId] = useState<number | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [viewingTransaction, setViewingTransaction] = useState<any | null>(null);
 
   const categories = [
     { id: "alimentacao", icon: "🍔", label: "Alimentação" },
@@ -88,15 +49,175 @@ export const Onboarding = () => {
     { id: "noite", label: "Noite" }
   ];
 
+  const resetForm = () => {
+    setDescricao("");
+    setValor("");
+    setData("");
+    setCategoria("");
+    setContextoEmocional("");
+    setPeriodo("");
+    setEditingId(null);
+    setError("");
+  };
+
+  const handleEdit = (transaction: any) => {
+    setEditingId(transaction.id);
+    setDescricao(transaction.descricao);
+    setValor(transaction.valor.toString().replace(".", ","));
+    setData(transaction.data);
+    setCategoria(transaction.categoria);
+    setContextoEmocional(transaction.contextoEmocional);
+    setPeriodo(transaction.periodo);
+    
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleSave = async () => {
+    if (!descricao || !valor || !data || !categoria || !contextoEmocional || !periodo) {
+      setError("Por favor, preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    if (!user) {
+      navigate(ROUTE_PATHS.login, { replace: true });
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const parsedValor = parseFloat(valor.replace(",", "."));
+      const newTransaction = {
+        id: editingId || Date.now(),
+        data,
+        descricao,
+        valor: parsedValor,
+        categoria,
+        subcategoria: "outros", // fallback
+        contextoEmocional,
+        diaSemana: new Date(data).toLocaleDateString('pt-BR', { weekday: 'long' }).split('-')[0],
+        periodo
+      };
+
+      if (editingId) {
+        // Atualiza item existente
+        const index = mockData.transacoes.findIndex(t => t.id === editingId);
+        if (index !== -1) {
+          mockData.transacoes[index] = newTransaction;
+        }
+      } else {
+        // CRUD com mock - cria novo
+        mockData.transacoes.push(newTransaction);
+      }
+
+      // Lógica de backend original (autenticação e onboarding)
+      await saveOnboardingData(user, { 
+        category: categoria, 
+        priority: contextoEmocional, 
+        view: periodo 
+      });
+      await refreshUserStatus();
+
+      // Limpa o form mas mantém o usuário na tela para ver a lista
+      resetForm();
+      setLoading(false);
+      
+    } catch {
+      setError("Não foi possível salvar os dados.");
+      setLoading(false);
+    }
+  };
+
+  const getCategoryDisplay = (catId: string) => categories.find(c => c.id === catId);
+  const getContextDisplay = (ctxId: string) => emotionalContexts.find(c => c.id === ctxId);
+
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
+    <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 relative">
+      {/* Modal de Visualização */}
+      {viewingTransaction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl bg-[#121214] p-6 ring-1 ring-white/10 relative">
+            <button 
+              onClick={() => setViewingTransaction(null)}
+              className="absolute right-6 top-6 text-(--text) hover:text-white"
+            >
+              <X size={20} />
+            </button>
+            <h3 className="text-xl font-bold text-white mb-6">Detalhes da Transação</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-(--text)">Descrição</p>
+                <p className="text-base font-medium text-white">{viewingTransaction.descricao}</p>
+              </div>
+              <div>
+                <p className="text-xs text-(--text)">Valor</p>
+                <p className="text-base font-medium text-red-400">
+                  R$ {viewingTransaction.valor.toFixed(2).replace('.', ',')}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-(--text)">Data</p>
+                  <p className="text-sm text-white">{viewingTransaction.data.split('-').reverse().join('/')}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-(--text)">Dia da semana</p>
+                  <p className="text-sm text-white capitalize">{viewingTransaction.diaSemana}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-(--text)">Período</p>
+                  <p className="text-sm text-white capitalize">{viewingTransaction.periodo}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-(--text)">Subcategoria</p>
+                  <p className="text-sm text-white capitalize">{viewingTransaction.subcategoria || 'N/A'}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-(--text)">Categoria</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <span>{getCategoryDisplay(viewingTransaction.categoria)?.icon}</span>
+                  <span className="text-sm text-white">{getCategoryDisplay(viewingTransaction.categoria)?.label}</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-(--text)">Contexto Emocional</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <span>{getContextDisplay(viewingTransaction.contextoEmocional)?.icon}</span>
+                  <span className="text-sm text-white">{getContextDisplay(viewingTransaction.contextoEmocional)?.title}</span>
+                </div>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => {
+                const tx = viewingTransaction;
+                setViewingTransaction(null);
+                handleEdit(tx);
+              }}
+              className="mt-8 w-full rounded-2xl bg-white/10 py-3 text-sm font-semibold text-white transition hover:bg-white/20 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Pencil size={16} />
+              Editar este registro
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="mb-8">
         <p className="text-sm text-(--secondary)">Onboarding</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-(--text-strong)">
-          Registrar novo gasto
+          {editingId ? "Editar gasto" : "Registrar novo gasto"}
         </h1>
         <p className="mt-3 text-sm text-(--text)">
-          Este app vai analisar seus padrões de consumo. Escolha suas preferências principais para personalizar a experiência, lembre-se: Quanto mais detalhes, melhor entendemos seus padrões.
+          {editingId 
+            ? "Atualize as informações desta transação abaixo."
+            : "Este app vai analisar seus padrões de consumo. Escolha suas preferências principais para personalizar a experiência, lembre-se: Quanto mais detalhes, melhor entendemos seus padrões."
+          }
         </p>
       </div>
 
@@ -159,7 +280,7 @@ export const Onboarding = () => {
               <button
                 key={cat.id}
                 onClick={() => setCategoria(cat.id)}
-                className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition ${
+                className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition cursor-pointer ${
                   categoria === cat.id 
                     ? 'bg-(--primary) text-slate-950' 
                     : 'bg-white/5 text-(--text-strong) ring-1 ring-white/10 hover:bg-white/10'
@@ -185,7 +306,7 @@ export const Onboarding = () => {
               <button
                 key={ctx.id}
                 onClick={() => setContextoEmocional(ctx.id)}
-                className={`flex flex-col items-start gap-1 rounded-xl p-4 text-left transition ${
+                className={`flex flex-col items-start gap-1 rounded-xl p-4 text-left transition cursor-pointer ${
                   contextoEmocional === ctx.id
                     ? 'bg-(--primary)/20 ring-1 ring-(--primary)'
                     : 'bg-white/5 ring-1 ring-white/10 hover:bg-white/10'
@@ -213,7 +334,7 @@ export const Onboarding = () => {
               <button
                 key={per.id}
                 onClick={() => setPeriodo(per.id)}
-                className={`rounded-xl px-6 py-3 text-sm font-medium transition ${
+                className={`rounded-xl px-6 py-3 text-sm font-medium transition cursor-pointer ${
                   periodo === per.id 
                     ? 'bg-(--primary) text-slate-950' 
                     : 'bg-white/5 text-(--text-strong) ring-1 ring-white/10 hover:bg-white/10'
@@ -225,14 +346,80 @@ export const Onboarding = () => {
           </div>
         </section>
 
-        <button
-          onClick={handleSave}
-          disabled={loading}
-          className="mt-4 rounded-2xl bg-(--primary) py-4 text-center text-sm font-bold text-slate-950 transition hover:bg-(--primary)/90 disabled:opacity-50"
-        >
-          {loading ? "Salvando..." : "Salvar Transação"}
-        </button>
+        <div className="flex items-center gap-3 mt-4">
+          <button
+            onClick={handleSave}
+            disabled={loading}
+            className="flex-1 rounded-2xl bg-(--primary) py-4 text-center text-sm font-bold text-slate-950 transition hover:bg-(--primary)/90 disabled:opacity-50 cursor-pointer"
+          >
+            {loading ? "Salvando..." : editingId ? "Atualizar Transação" : "Salvar Transação"}
+          </button>
+          
+          {editingId && (
+            <button
+              onClick={resetForm}
+              className="rounded-2xl bg-white/5 px-6 py-4 text-center text-sm font-bold text-white transition hover:bg-white/10 ring-1 ring-white/10 cursor-pointer"
+            >
+              Cancelar
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Seção de Gastos Anteriores */}
+      <section className="mt-12 pt-10 border-t border-white/10">
+        <h2 className="text-xl font-semibold text-(--text-strong) mb-6">Gastos Anteriores</h2>
+        
+        {mockData.transacoes.length === 0 ? (
+          <p className="text-sm text-(--text) bg-white/5 p-6 rounded-2xl ring-1 ring-white/5 text-center">
+            Nenhuma transação registrada ainda.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {[...mockData.transacoes].reverse().map(t => {
+              const categoryInfo = getCategoryDisplay(t.categoria);
+              const emotionalInfo = getContextDisplay(t.contextoEmocional);
+
+              return (
+                <div key={t.id} className="flex items-center justify-between rounded-2xl bg-white/5 p-4 ring-1 ring-white/8 transition hover:bg-white/10">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-semibold text-white">{t.descricao}</span>
+                      <span className="text-xs font-medium text-red-400 bg-red-400/10 px-2 py-0.5 rounded-full">
+                        R$ -{t.valor.toFixed(2).replace('.', ',')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-(--text)">
+                      <span>{t.data.split('-').reverse().join('/')}</span>
+                      <span className="w-1 h-1 rounded-full bg-white/20"></span>
+                      <span className="flex items-center gap-1">{categoryInfo?.icon} {categoryInfo?.label}</span>
+                      <span className="w-1 h-1 rounded-full bg-white/20 hidden sm:block"></span>
+                      <span className="hidden sm:flex items-center gap-1">{emotionalInfo?.icon} {emotionalInfo?.title}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 ml-4">
+                    <button 
+                      onClick={() => setViewingTransaction(t)}
+                      className="p-2 rounded-xl bg-white/5 text-(--text) hover:text-white hover:bg-white/10 transition cursor-pointer"
+                      title="Visualizar"
+                    >
+                      <Eye size={18} />
+                    </button>
+                    <button 
+                      onClick={() => handleEdit(t)}
+                      className="p-2 rounded-xl bg-(--primary)/10 text-(--primary) hover:bg-(--primary)/20 transition cursor-pointer"
+                      title="Editar"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </main>
   );
 };

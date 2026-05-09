@@ -14,6 +14,7 @@
 - ✅ Organizar metas financeiras realistas
 - ✅ Visualizar insights detalhados sobre gastos por categoria
 - ✅ Tomar decisões financeiras mais informadas
+- ✅ Descobrir padrões comportamentais e emocionais que impactam as decisões de compra, com base em um arquétipo personalizado gerado a partir do histórico financeiro
 
 O projeto fornece uma interface intuitiva e responsiva para gerenciamento financeiro pessoal, permitindo que usuários tenham melhor controle sobre suas despesas e entendam seus padrões de gastos.
 
